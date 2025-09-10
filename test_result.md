@@ -317,10 +317,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Sistema de cuestionarios backend"
-    - "Sistema de cuestionarios completo"
-    - "Botones de quiz en dashboard"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
