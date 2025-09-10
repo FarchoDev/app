@@ -1157,15 +1157,17 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, modulesRes, progressRes] = await Promise.all([
+      const [statsRes, modulesRes, progressRes, quizzesRes] = await Promise.all([
         axios.get(`${API}/dashboard/stats`),
         axios.get(`${API}/modules`),
-        axios.get(`${API}/progress`)
+        axios.get(`${API}/progress`),
+        axios.get(`${API}/quizzes`)
       ]);
       
       setStats(statsRes.data);
       setModules(modulesRes.data);
       setProgress(progressRes.data);
+      setQuizzes(quizzesRes.data);
     } catch (error) {
       toast({
         title: "Error",
