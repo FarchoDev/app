@@ -855,6 +855,11 @@ function App() {
                 <Dashboard />
               </ProtectedRoute>
             } />
+            <Route path="/study/:moduleId" element={
+              <ProtectedRoute>
+                <StudyModule />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Toaster />
