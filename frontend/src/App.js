@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import './App.css';
 
@@ -14,7 +14,7 @@ import { Badge } from './components/ui/badge';
 import { Separator } from './components/ui/separator';
 import { useToast } from './hooks/use-toast';
 import { Toaster } from './components/ui/toaster';
-import { BookOpen, Clock, Award, TrendingUp, User, LogOut, Home, FileText } from 'lucide-react';
+import { BookOpen, Clock, Award, TrendingUp, User, LogOut, Home, FileText, ChevronLeft, ChevronRight, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
