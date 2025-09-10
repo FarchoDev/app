@@ -694,6 +694,15 @@ def main():
         ("Mark Section Complete", tester.test_mark_section_complete),
         ("Update Module Progress", tester.test_update_module_progress),
         ("Progress Calculation Accuracy", tester.test_progress_calculation_accuracy),
+        # Quiz System Tests
+        ("Get Available Quizzes", tester.test_get_quizzes),
+        ("Get Specific Quiz", tester.test_get_specific_quiz),
+        ("Get Quiz Questions", tester.test_get_quiz_questions),
+        ("Start Quiz Attempt", tester.test_start_quiz_attempt),
+        ("Submit Quiz Answers", tester.test_submit_quiz),
+        ("Get Quiz Attempts History", tester.test_get_quiz_attempts_history),
+        ("Get Specific Quiz Attempt", tester.test_get_specific_quiz_attempt),
+        ("Quiz Data Integrity", tester.test_quiz_data_integrity),
     ]
     
     print(f"\n📋 Running {len(tests)} test categories...")
