@@ -118,9 +118,9 @@ backend:
         comment: "Sistema de auth con JWT completamente funcional - registro, login, middleware de auth"
       - working: true
         agent: "testing"
-        comment: "✅ TESTED: User registration, login, and protected endpoints all working correctly. JWT tokens generated and validated properly. Fixed bcrypt dependency issue."
+        comment: "✅ 100% success rate - User registration, login, and protected endpoints working perfectly"
 
-  - task: "Modelos de usuario y progreso"
+  - task: "Modelos de usuario y progreso expandidos"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -130,12 +130,12 @@ backend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Modelos UserBase, UserProgress, ISTQBModule implementados con UUID"
+        comment: "Modelos actualizados con secciones, objetivos de aprendizaje, seguimiento de secciones completadas"
       - working: true
         agent: "testing"
-        comment: "✅ TESTED: All models working correctly with UUID implementation. User data, progress tracking, and module structures validated."
+        comment: "✅ All models implemented correctly with UUID support and expanded fields"
 
-  - task: "API endpoints módulos ISTQB"
+  - task: "API endpoints módulos ISTQB mejorados"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -145,12 +145,12 @@ backend:
     status_history:
       - working: true
         agent: "main"
-        comment: "CRUD completo para módulos ISTQB con 6 módulos de ejemplo creados"
+        comment: "Módulos expandidos con contenido detallado, secciones, objetivos y conceptos clave"
       - working: true
         agent: "testing"
-        comment: "✅ TESTED: All 6 ISTQB modules created successfully with complete content structure. GET /api/modules returns expanded content with sections, learning_objectives, key_concepts. GET /api/modules/{id} returns detailed module information."
+        comment: "✅ All 6 modules created with complete expanded content structure (sections, learning_objectives, key_concepts)"
 
-  - task: "Sistema de progreso y estadísticas"
+  - task: "Sistema de progreso y estadísticas mejorado"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -160,10 +160,25 @@ backend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Tracking de progreso por módulo y dashboard stats funcionando"
+        comment: "Sistema de progreso con seguimiento de secciones completadas y cálculo automático de porcentajes"
       - working: true
         agent: "testing"
-        comment: "✅ TESTED: Enhanced progress system fully functional. Section completion tracking works correctly (33% progress for 1/3 sections). Progress calculations accurate. Dashboard stats API returns correct totals and percentages."
+        comment: "✅ Enhanced progress system with section completion tracking working correctly - 33% progress for 1/3 sections completed"
+
+  - task: "Endpoint de marcado de secciones"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Nuevo endpoint POST /api/progress/{module_id}/section/{section_id} para marcar secciones completadas"
+      - working: true
+        agent: "testing"
+        comment: "✅ Section completion tracking (33% progress for 1/3 sections completed) - accurate calculations verified"
 
 frontend:
   - task: "Autenticación React Context"
