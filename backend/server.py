@@ -402,15 +402,259 @@ async def mark_section_complete(
 async def get_dashboard_stats(current_user: UserResponse = Depends(get_current_user)):
     total_modules = await db.istqb_modules.count_documents({})
     user_progress = await db.user_progress.find({"user_id": current_user.id}).to_list(1000)
+    quiz_attempts = await db.quiz_attempts.find({"user_id": current_user.id, "is_completed": True}).to_list(1000)
     
     completed_modules = len([p for p in user_progress if p.get('completed', False)])
     total_time_spent = sum([p.get('time_spent', 0) for p in user_progress])
+    
+    # Quiz statistics
+    total_quizzes_taken = len(quiz_attempts)
+    average_score = round(sum([attempt.get('score', 0) for attempt in quiz_attempts]) / total_quizzes_taken) if total_quizzes_taken > 0 else 0
     
     return {
         "total_modules": total_modules,
         "completed_modules": completed_modules,
         "total_time_spent": total_time_spent,
-        "completion_percentage": round((completed_modules / total_modules * 100) if total_modules > 0 else 0, 1)
+        "completion_percentage": round((completed_modules / total_modules * 100) if total_modules > 0 else 0, 1),
+        "total_quizzes_taken": total_quizzes_taken,
+        "average_quiz_score": average_score
+    }
+
+# Quiz Routes
+@api_router.get("/questions", response_model=List[Question])
+async def get_questions(module_id: Optional[str] = None, difficulty: Optional[str] = None):
+    """Get questions, optionally filtered by module and difficulty"""
+    filter_dict = {}
+    if module_id:
+        filter_dict["module_id"] = module_id
+    if difficulty:
+        filter_dict["difficulty"] = difficulty
+    
+    questions = await db.questions.find(filter_dict).to_list(1000)
+    return [Question(**question) for question in questions]
+
+@api_router.get("/questions/{question_id}", response_model=Question)
+async def get_question(question_id: str):
+    """Get a specific question by ID"""
+    question = await db.questions.find_one({"id": question_id})
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return Question(**question)
+
+@api_router.post("/questions", response_model=Question)
+async def create_question(question: QuestionCreate, current_user: UserResponse = Depends(get_current_user)):
+    """Create a new question"""
+    new_question = Question(**question.dict())
+    await db.questions.insert_one(new_question.dict())
+    return new_question
+
+@api_router.get("/quizzes", response_model=List[Quiz])
+async def get_quizzes(module_id: Optional[str] = None, quiz_type: Optional[str] = None):
+    """Get quizzes, optionally filtered by module and type"""
+    filter_dict = {}
+    if module_id:
+        filter_dict["module_id"] = module_id
+    if quiz_type:
+        filter_dict["quiz_type"] = quiz_type
+    
+    quizzes = await db.quizzes.find(filter_dict).to_list(1000)
+    return [Quiz(**quiz) for quiz in quizzes]
+
+@api_router.get("/quizzes/{quiz_id}", response_model=Quiz)
+async def get_quiz(quiz_id: str):
+    """Get a specific quiz by ID"""
+    quiz = await db.quizzes.find_one({"id": quiz_id})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    return Quiz(**quiz)
+
+@api_router.post("/quizzes", response_model=Quiz)
+async def create_quiz(quiz: QuizCreate, current_user: UserResponse = Depends(get_current_user)):
+    """Create a new quiz"""
+    new_quiz = Quiz(**quiz.dict())
+    await db.quizzes.insert_one(new_quiz.dict())
+    return new_quiz
+
+@api_router.get("/quizzes/{quiz_id}/questions")
+async def get_quiz_questions(quiz_id: str, randomize: bool = True):
+    """Get questions for a specific quiz"""
+    quiz = await db.quizzes.find_one({"id": quiz_id})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    # Get questions
+    questions = []
+    for question_id in quiz.get("question_ids", []):
+        question = await db.questions.find_one({"id": question_id})
+        if question:
+            # Remove correct answers from options for the frontend
+            question_data = Question(**question).dict()
+            for option in question_data["options"]:
+                option.pop("is_correct", None)  # Remove correct answer info
+            questions.append(question_data)
+    
+    # Randomize questions if requested
+    if randomize and quiz.get("randomize_questions", True):
+        import random
+        random.shuffle(questions)
+    
+    # Randomize options within each question if requested
+    if quiz.get("randomize_options", True):
+        import random
+        for question in questions:
+            random.shuffle(question["options"])
+    
+    return {
+        "quiz": Quiz(**quiz).dict(),
+        "questions": questions
+    }
+
+@api_router.post("/quizzes/{quiz_id}/attempt")
+async def start_quiz_attempt(quiz_id: str, current_user: UserResponse = Depends(get_current_user)):
+    """Start a new quiz attempt"""
+    quiz = await db.quizzes.find_one({"id": quiz_id})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    attempt = QuizAttempt(
+        user_id=current_user.id,
+        quiz_id=quiz_id,
+        answers={}
+    )
+    
+    await db.quiz_attempts.insert_one(attempt.dict())
+    return {"attempt_id": attempt.id, "started_at": attempt.started_at}
+
+@api_router.post("/quizzes/{quiz_id}/submit")
+async def submit_quiz(quiz_id: str, submission: QuizSubmission, current_user: UserResponse = Depends(get_current_user)):
+    """Submit quiz answers and get results"""
+    # Find the most recent incomplete attempt
+    attempt = await db.quiz_attempts.find_one({
+        "user_id": current_user.id,
+        "quiz_id": quiz_id,
+        "is_completed": False
+    })
+    
+    if not attempt:
+        raise HTTPException(status_code=404, detail="No active quiz attempt found")
+    
+    # Get quiz and questions
+    quiz = await db.quizzes.find_one({"id": quiz_id})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    # Calculate score
+    total_questions = len(quiz.get("question_ids", []))
+    correct_answers = 0
+    detailed_results = []
+    
+    # Convert answers to dict for easier access
+    answers_dict = {answer.question_id: answer.selected_option_id for answer in submission.answers}
+    
+    for question_id in quiz.get("question_ids", []):
+        question = await db.questions.find_one({"id": question_id})
+        if question:
+            selected_option_id = answers_dict.get(question_id)
+            correct_option = next((opt for opt in question["options"] if opt["is_correct"]), None)
+            is_correct = selected_option_id == correct_option["id"] if correct_option else False
+            
+            if is_correct:
+                correct_answers += 1
+            
+            detailed_results.append({
+                "question_id": question_id,
+                "question_text": question["question_text"],
+                "selected_option_id": selected_option_id,
+                "correct_option_id": correct_option["id"] if correct_option else None,
+                "is_correct": is_correct,
+                "options": question["options"],
+                "explanation": question.get("explanation", "")
+            })
+    
+    score = round((correct_answers / total_questions * 100)) if total_questions > 0 else 0
+    passed = score >= quiz.get("passing_score", 70)
+    
+    # Update attempt
+    await db.quiz_attempts.update_one(
+        {"id": attempt["id"]},
+        {
+            "$set": {
+                "answers": answers_dict,
+                "score": score,
+                "passed": passed,
+                "time_taken": submission.time_taken,
+                "completed_at": datetime.now(timezone.utc),
+                "is_completed": True
+            }
+        }
+    )
+    
+    return {
+        "attempt_id": attempt["id"],
+        "score": score,
+        "passed": passed,
+        "correct_answers": correct_answers,
+        "total_questions": total_questions,
+        "passing_score": quiz.get("passing_score", 70),
+        "time_taken": submission.time_taken,
+        "detailed_results": detailed_results if quiz.get("show_results_immediately", True) else None
+    }
+
+@api_router.get("/quiz-attempts")
+async def get_user_quiz_attempts(current_user: UserResponse = Depends(get_current_user)):
+    """Get all quiz attempts for the current user"""
+    attempts = await db.quiz_attempts.find({"user_id": current_user.id}).sort("started_at", -1).to_list(1000)
+    
+    # Enrich with quiz information
+    enriched_attempts = []
+    for attempt in attempts:
+        quiz = await db.quizzes.find_one({"id": attempt["quiz_id"]})
+        attempt_data = QuizAttempt(**attempt).dict()
+        attempt_data["quiz_title"] = quiz.get("title", "Unknown Quiz") if quiz else "Unknown Quiz"
+        attempt_data["quiz_type"] = quiz.get("quiz_type", "unknown") if quiz else "unknown"
+        enriched_attempts.append(attempt_data)
+    
+    return enriched_attempts
+
+@api_router.get("/quiz-attempts/{attempt_id}")
+async def get_quiz_attempt_results(attempt_id: str, current_user: UserResponse = Depends(get_current_user)):
+    """Get detailed results of a specific quiz attempt"""
+    attempt = await db.quiz_attempts.find_one({"id": attempt_id, "user_id": current_user.id})
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Quiz attempt not found")
+    
+    if not attempt.get("is_completed", False):
+        raise HTTPException(status_code=400, detail="Quiz attempt not completed yet")
+    
+    # Get quiz and rebuild detailed results
+    quiz = await db.quizzes.find_one({"id": attempt["quiz_id"]})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    detailed_results = []
+    answers_dict = attempt.get("answers", {})
+    
+    for question_id in quiz.get("question_ids", []):
+        question = await db.questions.find_one({"id": question_id})
+        if question:
+            selected_option_id = answers_dict.get(question_id)
+            correct_option = next((opt for opt in question["options"] if opt["is_correct"]), None)
+            is_correct = selected_option_id == correct_option["id"] if correct_option else False
+            
+            detailed_results.append({
+                "question_id": question_id,
+                "question_text": question["question_text"],
+                "selected_option_id": selected_option_id,
+                "correct_option_id": correct_option["id"] if correct_option else None,
+                "is_correct": is_correct,
+                "options": question["options"],
+                "explanation": question.get("explanation", "")
+            })
+    
+    return {
+        "attempt": QuizAttempt(**attempt).dict(),
+        "quiz": Quiz(**quiz).dict(),
+        "detailed_results": detailed_results
     }
 
 # Include the router in the main app
