@@ -808,6 +808,7 @@ const Dashboard = () => {
                     <Button 
                       variant={isCompleted ? "secondary" : "default"}
                       className="ml-4"
+                      onClick={() => navigate(`/study/${module.id}`)}
                     >
                       {isCompleted ? "Revisar" : "Estudiar"}
                     </Button>
