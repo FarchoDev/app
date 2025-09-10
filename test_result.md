@@ -122,15 +122,18 @@ backend:
 
   - task: "Sistema de cuestionarios backend"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Modelos Question/Quiz/QuizAttempt implementados, endpoints completos: GET /quizzes, POST /quizzes/:id/attempt, POST /quizzes/:id/submit, preguntas de ejemplo creadas"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE QUIZ SYSTEM TESTING COMPLETED: All 8 quiz endpoints tested successfully (100% success rate). Tested complete quiz flow: authentication → get quizzes → get questions → start attempt → submit answers → verify results → check history. All validations passed: quiz-module linking, score calculations, data integrity, answer hiding, attempt tracking. Sample data includes 2 quizzes with 5 questions each, properly linked to ISTQB modules."
 
   - task: "Modelos de usuario y progreso expandidos"
     implemented: true
