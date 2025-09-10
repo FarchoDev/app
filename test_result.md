@@ -210,7 +210,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Verificar estado actual de la aplicación"
+    - "Backend testing completed successfully"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
