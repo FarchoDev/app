@@ -357,6 +357,324 @@ class ISTQBAPITester:
                 return False
         return False
 
+    # ==================== QUIZ SYSTEM TESTS ====================
+    
+    def test_get_quizzes(self):
+        """Test getting available quizzes"""
+        success, response = self.run_test(
+            "Get Available Quizzes",
+            "GET",
+            "quizzes",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   ✅ Found {len(response)} quizzes")
+            if len(response) > 0:
+                # Store first quiz for detailed testing
+                self.first_quiz = response[0]
+                self.first_quiz_id = self.first_quiz.get('id')
+                print(f"   📝 First quiz: {self.first_quiz.get('title')}")
+                print(f"   📝 Quiz type: {self.first_quiz.get('quiz_type')}")
+                print(f"   📝 Questions: {len(self.first_quiz.get('question_ids', []))}")
+                print(f"   📝 Time limit: {self.first_quiz.get('time_limit')} minutes")
+                print(f"   📝 Passing score: {self.first_quiz.get('passing_score')}%")
+                
+                # Verify quiz structure
+                expected_fields = ['id', 'title', 'description', 'quiz_type', 'question_ids', 'passing_score']
+                missing_fields = [field for field in expected_fields if field not in self.first_quiz]
+                
+                if not missing_fields:
+                    print("   ✅ All expected fields present in quiz")
+                    return True
+                else:
+                    print(f"   ❌ Missing fields in quiz: {missing_fields}")
+                    return False
+            else:
+                print("   ⚠️  No quizzes found - this might be expected if none are created")
+                return True
+        return False
+
+    def test_get_specific_quiz(self):
+        """Test getting specific quiz details"""
+        if not hasattr(self, 'first_quiz_id') or not self.first_quiz_id:
+            print("❌ No quiz ID available for specific quiz test")
+            return False
+            
+        success, response = self.run_test(
+            f"Get Specific Quiz ({self.first_quiz_id[:8]}...)",
+            "GET",
+            f"quizzes/{self.first_quiz_id}",
+            200
+        )
+        
+        if success:
+            expected_fields = ['id', 'title', 'description', 'quiz_type', 'question_ids', 'passing_score']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if not missing_fields:
+                print("   ✅ All expected fields present in quiz detail")
+                print(f"   📝 Quiz: {response.get('title')}")
+                print(f"   📝 Type: {response.get('quiz_type')}")
+                print(f"   📝 Questions: {len(response.get('question_ids', []))}")
+                return True
+            else:
+                print(f"   ❌ Missing fields in quiz detail: {missing_fields}")
+                return False
+        return False
+
+    def test_get_quiz_questions(self):
+        """Test getting questions for a specific quiz"""
+        if not hasattr(self, 'first_quiz_id') or not self.first_quiz_id:
+            print("❌ No quiz ID available for quiz questions test")
+            return False
+            
+        success, response = self.run_test(
+            f"Get Quiz Questions ({self.first_quiz_id[:8]}...)",
+            "GET",
+            f"quizzes/{self.first_quiz_id}/questions",
+            200
+        )
+        
+        if success:
+            if 'quiz' in response and 'questions' in response:
+                quiz_data = response['quiz']
+                questions = response['questions']
+                
+                print(f"   ✅ Quiz questions retrieved:")
+                print(f"      Quiz: {quiz_data.get('title')}")
+                print(f"      Questions: {len(questions)}")
+                
+                if len(questions) > 0:
+                    # Store questions for quiz attempt
+                    self.quiz_questions = questions
+                    
+                    # Verify question structure (should not have correct answers exposed)
+                    first_question = questions[0]
+                    print(f"      First question: {first_question.get('question_text', '')[:50]}...")
+                    print(f"      Options: {len(first_question.get('options', []))}")
+                    
+                    # Check that correct answers are not exposed
+                    for option in first_question.get('options', []):
+                        if 'is_correct' in option:
+                            print(f"   ❌ Correct answers exposed in quiz questions!")
+                            return False
+                    
+                    print("   ✅ Correct answers properly hidden from quiz questions")
+                    return True
+                else:
+                    print("   ❌ No questions found in quiz")
+                    return False
+            else:
+                print("   ❌ Invalid response structure for quiz questions")
+                return False
+        return False
+
+    def test_start_quiz_attempt(self):
+        """Test starting a new quiz attempt"""
+        if not self.token or not hasattr(self, 'first_quiz_id') or not self.first_quiz_id:
+            print("❌ Missing required data for quiz attempt test")
+            return False
+            
+        success, response = self.run_test(
+            f"Start Quiz Attempt",
+            "POST",
+            f"quizzes/{self.first_quiz_id}/attempt",
+            200
+        )
+        
+        if success:
+            if 'attempt_id' in response and 'started_at' in response:
+                self.attempt_id = response['attempt_id']
+                print(f"   ✅ Quiz attempt started:")
+                print(f"      Attempt ID: {self.attempt_id}")
+                print(f"      Started at: {response['started_at']}")
+                return True
+            else:
+                print("   ❌ Missing expected fields in quiz attempt response")
+                return False
+        return False
+
+    def test_submit_quiz(self):
+        """Test submitting quiz answers and getting results"""
+        if not self.token or not hasattr(self, 'first_quiz_id') or not hasattr(self, 'quiz_questions'):
+            print("❌ Missing required data for quiz submission test")
+            return False
+            
+        # Prepare answers - simulate answering questions
+        answers = []
+        for question in self.quiz_questions:
+            question_id = question.get('id')
+            options = question.get('options', [])
+            if options:
+                # Select first option for each question (simple simulation)
+                selected_option_id = options[0].get('id')
+                answers.append({
+                    "question_id": question_id,
+                    "selected_option_id": selected_option_id
+                })
+        
+        submission_data = {
+            "quiz_id": self.first_quiz_id,
+            "answers": answers,
+            "time_taken": 300  # 5 minutes in seconds
+        }
+        
+        success, response = self.run_test(
+            f"Submit Quiz Answers",
+            "POST",
+            f"quizzes/{self.first_quiz_id}/submit",
+            200,
+            data=submission_data
+        )
+        
+        if success:
+            expected_fields = ['attempt_id', 'score', 'passed', 'correct_answers', 'total_questions', 'passing_score']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if not missing_fields:
+                print(f"   ✅ Quiz submitted successfully:")
+                print(f"      Score: {response.get('score')}%")
+                print(f"      Passed: {response.get('passed')}")
+                print(f"      Correct: {response.get('correct_answers')}/{response.get('total_questions')}")
+                print(f"      Passing score: {response.get('passing_score')}%")
+                print(f"      Time taken: {response.get('time_taken')} seconds")
+                
+                # Verify score calculation
+                correct = response.get('correct_answers', 0)
+                total = response.get('total_questions', 1)
+                expected_score = round((correct / total * 100)) if total > 0 else 0
+                actual_score = response.get('score', 0)
+                
+                if actual_score == expected_score:
+                    print("   ✅ Score calculation is correct")
+                else:
+                    print(f"   ❌ Score calculation incorrect: expected {expected_score}%, got {actual_score}%")
+                    return False
+                
+                # Store attempt ID for history testing
+                self.completed_attempt_id = response.get('attempt_id')
+                return True
+            else:
+                print(f"   ❌ Missing fields in quiz submission response: {missing_fields}")
+                return False
+        return False
+
+    def test_get_quiz_attempts_history(self):
+        """Test getting user's quiz attempt history"""
+        if not self.token:
+            print("❌ No token available for quiz attempts history test")
+            return False
+            
+        success, response = self.run_test(
+            "Get Quiz Attempts History",
+            "GET",
+            "quiz-attempts",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   ✅ Quiz attempts history retrieved: {len(response)} attempts")
+            
+            if len(response) > 0:
+                # Verify attempt structure
+                first_attempt = response[0]
+                expected_fields = ['id', 'user_id', 'quiz_id', 'score', 'passed', 'started_at', 'quiz_title']
+                missing_fields = [field for field in expected_fields if field not in first_attempt]
+                
+                if not missing_fields:
+                    print("   ✅ All expected fields present in attempt history")
+                    print(f"      Latest attempt: {first_attempt.get('quiz_title')}")
+                    print(f"      Score: {first_attempt.get('score')}%")
+                    print(f"      Status: {'Passed' if first_attempt.get('passed') else 'Failed'}")
+                    return True
+                else:
+                    print(f"   ❌ Missing fields in attempt history: {missing_fields}")
+                    return False
+            else:
+                print("   ⚠️  No quiz attempts found in history")
+                return True
+        return False
+
+    def test_get_specific_quiz_attempt(self):
+        """Test getting detailed results of a specific quiz attempt"""
+        if not self.token or not hasattr(self, 'completed_attempt_id'):
+            print("❌ Missing required data for specific quiz attempt test")
+            return False
+            
+        success, response = self.run_test(
+            f"Get Specific Quiz Attempt Results",
+            "GET",
+            f"quiz-attempts/{self.completed_attempt_id}",
+            200
+        )
+        
+        if success:
+            expected_fields = ['attempt', 'quiz', 'detailed_results']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if not missing_fields:
+                attempt = response['attempt']
+                quiz = response['quiz']
+                detailed_results = response['detailed_results']
+                
+                print(f"   ✅ Detailed quiz attempt results retrieved:")
+                print(f"      Quiz: {quiz.get('title')}")
+                print(f"      Score: {attempt.get('score')}%")
+                print(f"      Questions analyzed: {len(detailed_results)}")
+                
+                # Verify detailed results structure
+                if len(detailed_results) > 0:
+                    first_result = detailed_results[0]
+                    result_fields = ['question_id', 'question_text', 'selected_option_id', 'correct_option_id', 'is_correct', 'options', 'explanation']
+                    missing_result_fields = [field for field in result_fields if field not in first_result]
+                    
+                    if not missing_result_fields:
+                        print("   ✅ All expected fields present in detailed results")
+                        correct_count = sum(1 for result in detailed_results if result.get('is_correct'))
+                        print(f"      Correct answers: {correct_count}/{len(detailed_results)}")
+                        return True
+                    else:
+                        print(f"   ❌ Missing fields in detailed results: {missing_result_fields}")
+                        return False
+                else:
+                    print("   ❌ No detailed results found")
+                    return False
+            else:
+                print(f"   ❌ Missing fields in quiz attempt response: {missing_fields}")
+                return False
+        return False
+
+    def test_quiz_data_integrity(self):
+        """Test that quiz data is properly linked to ISTQB modules"""
+        if not hasattr(self, 'first_quiz') or not self.first_quiz:
+            print("❌ No quiz data available for integrity test")
+            return False
+            
+        quiz = self.first_quiz
+        module_id = quiz.get('module_id')
+        
+        if module_id:
+            # Verify the module exists
+            success, module_response = self.run_test(
+                f"Verify Quiz Module Link",
+                "GET",
+                f"modules/{module_id}",
+                200
+            )
+            
+            if success:
+                print(f"   ✅ Quiz properly linked to module:")
+                print(f"      Quiz: {quiz.get('title')}")
+                print(f"      Module: {module_response.get('title')}")
+                return True
+            else:
+                print(f"   ❌ Quiz linked to non-existent module: {module_id}")
+                return False
+        else:
+            print("   ⚠️  Quiz not linked to specific module (general quiz)")
+            return True
+
 def main():
     print("🚀 Starting ISTQB Platform API Tests")
     print("=" * 50)
