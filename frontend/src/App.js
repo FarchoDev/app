@@ -1394,6 +1394,11 @@ function App() {
                 <StudyModule />
               </ProtectedRoute>
             } />
+            <Route path="/quiz/:quizId" element={
+              <ProtectedRoute>
+                <Quiz />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Toaster />
