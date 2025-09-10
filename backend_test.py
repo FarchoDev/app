@@ -210,6 +210,133 @@ class ISTQBAPITester:
             return True
         return False
 
+    def test_get_specific_module(self):
+        """Test getting specific module details"""
+        if not self.first_module_id:
+            print("❌ No module ID available for specific module test")
+            return False
+            
+        success, response = self.run_test(
+            f"Get Specific Module ({self.first_module_id[:8]}...)",
+            "GET",
+            f"modules/{self.first_module_id}",
+            200
+        )
+        
+        if success:
+            expected_fields = ['id', 'title', 'description', 'content', 'sections', 'learning_objectives', 'key_concepts']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if not missing_fields:
+                print("   ✅ All expected fields present in module detail")
+                print(f"   📚 Module: {response.get('title')}")
+                print(f"   📚 Sections: {len(response.get('sections', []))}")
+                print(f"   📚 Learning objectives: {len(response.get('learning_objectives', []))}")
+                print(f"   📚 Key concepts: {len(response.get('key_concepts', []))}")
+                
+                # Store first section ID for section completion test
+                sections = response.get('sections', [])
+                if sections:
+                    self.first_section_id = sections[0].get('id')
+                    print(f"   📝 First section: {sections[0].get('title')}")
+                
+                return True
+            else:
+                print(f"   ❌ Missing fields in module detail: {missing_fields}")
+                return False
+        return False
+
+    def test_mark_section_complete(self):
+        """Test marking a specific section as completed"""
+        if not self.token or not self.first_module_id or not hasattr(self, 'first_section_id'):
+            print("❌ Missing required data for section completion test")
+            return False
+            
+        success, response = self.run_test(
+            f"Mark Section Complete",
+            "POST",
+            f"progress/{self.first_module_id}/section/{self.first_section_id}",
+            200
+        )
+        
+        if success:
+            expected_keys = ['message', 'progress_percentage', 'sections_completed']
+            if all(key in response for key in expected_keys):
+                print(f"   ✅ Section marked complete:")
+                print(f"      Progress: {response.get('progress_percentage')}%")
+                print(f"      Sections completed: {response.get('sections_completed')}")
+                return True
+            else:
+                print(f"   ❌ Missing expected keys in response")
+                return False
+        return False
+
+    def test_update_module_progress(self):
+        """Test updating general module progress"""
+        if not self.token or not self.first_module_id:
+            print("❌ Missing required data for module progress test")
+            return False
+            
+        # Test updating progress with query parameters
+        endpoint = f"progress/{self.first_module_id}?progress_percentage=75&time_spent=30"
+        if hasattr(self, 'first_section_id'):
+            endpoint += f"&section_id={self.first_section_id}"
+            
+        success, response = self.run_test(
+            "Update Module Progress",
+            "POST",
+            endpoint,
+            200
+        )
+        
+        if success and 'message' in response:
+            print(f"   ✅ Progress updated successfully")
+            return True
+        return False
+
+    def test_progress_calculation_accuracy(self):
+        """Test that progress calculations are accurate"""
+        if not self.token:
+            print("❌ No token available for progress calculation test")
+            return False
+            
+        # Get current progress
+        success, progress_response = self.run_test(
+            "Get Progress for Calculation Check",
+            "GET",
+            "progress",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Get dashboard stats
+        success, stats_response = self.run_test(
+            "Get Dashboard Stats for Calculation Check",
+            "GET",
+            "dashboard/stats",
+            200
+        )
+        
+        if success:
+            total_modules = stats_response.get('total_modules', 0)
+            completed_modules = stats_response.get('completed_modules', 0)
+            completion_percentage = stats_response.get('completion_percentage', 0)
+            
+            # Verify calculation
+            expected_percentage = round((completed_modules / total_modules * 100) if total_modules > 0 else 0, 1)
+            
+            if abs(completion_percentage - expected_percentage) < 0.1:  # Allow small floating point differences
+                print(f"   ✅ Progress calculation accurate:")
+                print(f"      {completed_modules}/{total_modules} = {completion_percentage}%")
+                return True
+            else:
+                print(f"   ❌ Progress calculation incorrect:")
+                print(f"      Expected: {expected_percentage}%, Got: {completion_percentage}%")
+                return False
+        return False
+
 def main():
     print("🚀 Starting ISTQB Platform API Tests")
     print("=" * 50)
