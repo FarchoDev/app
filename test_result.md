@@ -306,6 +306,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Agregados botones de Quiz junto a botones de Estudiar en dashboard, navegación hacia /quiz/:quizId"
+      - working: "NA"
+        agent: "testing"
+        comment: "Frontend quiz buttons not tested per testing protocol (backend testing only). Backend quiz endpoints are fully functional and ready for frontend integration."
 
 metadata:
   created_by: "main_agent"
