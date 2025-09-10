@@ -14,7 +14,7 @@ import { Badge } from './components/ui/badge';
 import { Separator } from './components/ui/separator';
 import { useToast } from './hooks/use-toast';
 import { Toaster } from './components/ui/toaster';
-import { BookOpen, Clock, Award, TrendingUp, User, LogOut, Home, FileText, ChevronLeft, ChevronRight, CheckCircle, ArrowLeft } from 'lucide-react';
+import { BookOpen, Clock, Award, TrendingUp, User, LogOut, Home, FileText, ChevronLeft, ChevronRight, CheckCircle, ArrowLeft, Brain, Target, Timer, PlayCircle, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
