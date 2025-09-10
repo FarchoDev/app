@@ -1280,6 +1280,242 @@ Define el enfoque general del testing para el proyecto.
         
         await db.istqb_modules.insert_many(sample_modules)
         logger.info("Sample ISTQB modules created")
+        
+        # Create sample questions if they don't exist
+        existing_questions = await db.questions.count_documents({})
+        if existing_questions == 0:
+            # Get first module ID for questions
+            first_module = sample_modules[0]
+            module_id = first_module["id"]
+            section_id = first_module["sections"][0]["id"]
+            
+            sample_questions = [
+                {
+                    "id": str(uuid.uuid4()),
+                    "module_id": module_id,
+                    "section_id": section_id,
+                    "question_text": "¿Cuál de los siguientes NO es uno de los 7 principios fundamentales del testing según ISTQB?",
+                    "question_type": "multiple_choice",
+                    "options": [
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "El testing muestra la presencia de defectos, no su ausencia",
+                            "is_correct": False,
+                            "explanation": "Este es el principio #1 del testing"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Testing exhaustivo es imposible",
+                            "is_correct": False,
+                            "explanation": "Este es el principio #2 del testing"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "El testing garantiza software libre de defectos",
+                            "is_correct": True,
+                            "explanation": "Correcto. Este NO es un principio del testing. El testing no puede garantizar software libre de defectos."
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Testing temprano ahorra tiempo y dinero",
+                            "is_correct": False,
+                            "explanation": "Este es el principio #3 del testing"
+                        }
+                    ],
+                    "difficulty": "medium",
+                    "topic": "Principios del Testing",
+                    "explanation": "El testing no puede probar la ausencia de defectos, solo puede mostrar que están presentes. Nunca puede garantizar software completamente libre de defectos.",
+                    "created_at": datetime.now(timezone.utc)
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "module_id": module_id,
+                    "section_id": section_id,
+                    "question_text": "¿Qué diferencia hay entre un ERROR, un DEFECTO y una FALLA?",
+                    "question_type": "multiple_choice",
+                    "options": [
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Son términos sinónimos que se refieren a lo mismo",
+                            "is_correct": False,
+                            "explanation": "No son sinónimos, cada término tiene un significado específico"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Error es la acción humana, Defecto es la imperfección en el código, Falla es la desviación del comportamiento esperado",
+                            "is_correct": True,
+                            "explanation": "Correcto. Error (mistake) → Defecto (defect/bug) → Falla (failure) es la secuencia lógica."
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Falla es lo más grave, luego Defecto, luego Error",
+                            "is_correct": False,
+                            "explanation": "No se trata de gravedad sino de la secuencia causal"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Solo importa identificar las Fallas, no los Errores ni Defectos",
+                            "is_correct": False,
+                            "explanation": "Es importante entender toda la cadena causal para prevenir problemas"
+                        }
+                    ],
+                    "difficulty": "easy",
+                    "topic": "Terminología del Testing",
+                    "explanation": "La secuencia es: Error humano → genera un Defecto en el código → que puede causar una Falla en la ejecución.",
+                    "created_at": datetime.now(timezone.utc)
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "module_id": module_id,
+                    "section_id": section_id,
+                    "question_text": "¿Por qué es importante comenzar las actividades de testing lo antes posible en el ciclo de vida del desarrollo?",
+                    "question_type": "multiple_choice",
+                    "options": [
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Para ocupar a los testers mientras los desarrolladores terminan el código",
+                            "is_correct": False,
+                            "explanation": "Esta no es la razón del testing temprano"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Porque es más barato encontrar y corregir defectos en etapas tempranas",
+                            "is_correct": True,
+                            "explanation": "Correcto. Este es el principio #3: Testing temprano ahorra tiempo y dinero."
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Para poder hacer testing exhaustivo de todo el sistema",
+                            "is_correct": False,
+                            "explanation": "El testing exhaustivo es imposible según el principio #2"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Para eliminar completamente todos los defectos del software",
+                            "is_correct": False,
+                            "explanation": "El testing no puede probar la ausencia de defectos"
+                        }
+                    ],
+                    "difficulty": "medium",
+                    "topic": "Testing Temprano",
+                    "explanation": "Cuanto más tarde se encuentra un defecto en el ciclo de desarrollo, más costoso es corregirlo. Los defectos encontrados en producción pueden costar 100 veces más que los encontrados en desarrollo.",
+                    "created_at": datetime.now(timezone.utc)
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "module_id": module_id,
+                    "section_id": section_id,
+                    "question_text": "¿Qué significa la 'Paradoja del Pesticida' en testing?",
+                    "question_type": "multiple_choice",
+                    "options": [
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Que el testing es tóxico para el desarrollo de software",
+                            "is_correct": False,
+                            "explanation": "No tiene que ver con toxicidad literal"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Que si los mismos tests se repiten constantemente, eventualmente dejarán de encontrar defectos",
+                            "is_correct": True,
+                            "explanation": "Correcto. Como los pesticidas pierden efectividad, los tests repetitivos también."
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Que algunos bugs son inmunes a las pruebas",
+                            "is_correct": False,
+                            "explanation": "No se trata de inmunidad sino de repetición"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Que hacer testing mata la creatividad de los desarrolladores",
+                            "is_correct": False,
+                            "explanation": "Esta no es la analogía correcta"
+                        }
+                    ],
+                    "difficulty": "medium",
+                    "topic": "Principios del Testing",
+                    "explanation": "Los tests deben evolucionar y actualizarse. Si siempre ejecutamos los mismos tests, encontraremos los mismos bugs pero no los nuevos.",
+                    "created_at": datetime.now(timezone.utc)
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "module_id": module_id,
+                    "section_id": section_id,
+                    "question_text": "¿Cuáles son los principales objetivos del testing de software?",
+                    "question_type": "multiple_choice",
+                    "options": [
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Solo encontrar bugs y reportarlos",
+                            "is_correct": False,
+                            "explanation": "El testing tiene objetivos más amplios que solo encontrar bugs"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Prevenir defectos, verificar requisitos, validar funcionalidad y construir confianza",
+                            "is_correct": True,
+                            "explanation": "Correcto. Estos son los principales objetivos del testing según ISTQB."
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Retrasar el lanzamiento del producto hasta que sea perfecto",
+                            "is_correct": False,
+                            "explanation": "El testing busca equilibrio entre calidad y tiempo de entrega"
+                        },
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": "Demostrar que el software no tiene ningún defecto",
+                            "is_correct": False,
+                            "explanation": "El testing no puede probar la ausencia de defectos"
+                        }
+                    ],
+                    "difficulty": "easy",
+                    "topic": "Objetivos del Testing",
+                    "explanation": "El testing tiene múltiples objetivos: prevenir defectos mediante revisiones tempranas, verificar que se cumplen los requisitos, validar que funciona como esperan los usuarios, y construir confianza en la calidad.",
+                    "created_at": datetime.now(timezone.utc)
+                }
+            ]
+            
+            await db.questions.insert_many(sample_questions)
+            logger.info("Sample questions created")
+            
+            # Create sample quizzes
+            question_ids = [q["id"] for q in sample_questions]
+            
+            sample_quizzes = [
+                {
+                    "id": str(uuid.uuid4()),
+                    "title": "Fundamentos del Testing - Práctica",
+                    "description": "Quiz de práctica sobre los conceptos básicos del testing de software",
+                    "module_id": module_id,
+                    "quiz_type": "practice",
+                    "question_ids": question_ids,
+                    "time_limit": 15,  # 15 minutes
+                    "passing_score": 70,
+                    "randomize_questions": True,
+                    "randomize_options": True,
+                    "show_results_immediately": True,
+                    "created_at": datetime.now(timezone.utc)
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "title": "Examen Módulo 1 - Fundamentos",
+                    "description": "Examen formal del módulo 1: Fundamentos de las Pruebas",
+                    "module_id": module_id,
+                    "quiz_type": "module_test",
+                    "question_ids": question_ids,
+                    "time_limit": 20,  # 20 minutes
+                    "passing_score": 75,
+                    "randomize_questions": True,
+                    "randomize_options": True,
+                    "show_results_immediately": True,
+                    "created_at": datetime.now(timezone.utc)
+                }
+            ]
+            
+            await db.quizzes.insert_many(sample_quizzes)
+            logger.info("Sample quizzes created")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
