@@ -309,7 +309,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend testing completed successfully"
+    - "Sistema de cuestionarios backend"
+    - "Sistema de cuestionarios completo"
+    - "Botones de quiz en dashboard"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
