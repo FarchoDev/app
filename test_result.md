@@ -120,6 +120,18 @@ backend:
         agent: "testing"
         comment: "✅ 100% success rate - User registration, login, and protected endpoints working perfectly"
 
+  - task: "Sistema de cuestionarios backend"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Modelos Question/Quiz/QuizAttempt implementados, endpoints completos: GET /quizzes, POST /quizzes/:id/attempt, POST /quizzes/:id/submit, preguntas de ejemplo creadas"
+
   - task: "Modelos de usuario y progreso expandidos"
     implemented: true
     working: true
