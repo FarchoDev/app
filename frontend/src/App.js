@@ -1145,6 +1145,8 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
+  const [activeTab, setActiveTab] = useState("modules");
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
