@@ -123,7 +123,7 @@ class ISTQBAPITester:
         return False
 
     def test_get_modules(self):
-        """Test getting ISTQB modules"""
+        """Test getting ISTQB modules with expanded content"""
         success, response = self.run_test(
             "Get ISTQB Modules",
             "GET",
@@ -135,6 +135,24 @@ class ISTQBAPITester:
             print(f"   ✅ Found {len(response)} modules")
             if len(response) >= 6:
                 print("   ✅ Expected 6 modules found")
+                
+                # Verify expanded content structure
+                first_module = response[0] if response else {}
+                expected_fields = ['id', 'title', 'description', 'content', 'sections', 'learning_objectives', 'key_concepts', 'estimated_time']
+                missing_fields = [field for field in expected_fields if field not in first_module]
+                
+                if not missing_fields:
+                    print("   ✅ All expected fields present in modules")
+                    print(f"   📚 First module has {len(first_module.get('sections', []))} sections")
+                    print(f"   📚 First module has {len(first_module.get('learning_objectives', []))} learning objectives")
+                    print(f"   📚 First module has {len(first_module.get('key_concepts', []))} key concepts")
+                else:
+                    print(f"   ❌ Missing fields in module: {missing_fields}")
+                    return False
+                
+                # Store first module ID for detailed testing
+                self.first_module_id = first_module.get('id')
+                
                 # Print module titles
                 for i, module in enumerate(response[:3]):
                     print(f"   📚 Module {i+1}: {module.get('title', 'No title')}")
