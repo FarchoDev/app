@@ -265,6 +265,30 @@ frontend:
         agent: "main"
         comment: "Estilos CSS personalizados para renderizar contenido educativo (headings, listas, código, etc.)"
 
+  - task: "Sistema de cuestionarios completo"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Sistema completo implementado: modelos Quiz/Question/QuizAttempt, endpoints completos, componente React Quiz, rutas configuradas, botones en dashboard"
+
+  - task: "Botones de quiz en dashboard"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Agregados botones de Quiz junto a botones de Estudiar en dashboard, navegación hacia /quiz/:quizId"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
