@@ -88,19 +88,39 @@ class ISTQBAPITester:
 
     def test_user_login(self):
         """Test user login with existing credentials"""
+        # First create a user for login testing
+        test_email = f"login_test_{datetime.now().strftime('%H%M%S')}@istqb.com"
+        
+        # Register user first
+        register_success, register_response = self.run_test(
+            "Register User for Login Test",
+            "POST",
+            "auth/register",
+            200,
+            data={
+                "email": test_email,
+                "password": "password123",
+                "full_name": "Login Test User"
+            }
+        )
+        
+        if not register_success:
+            print("   ❌ Failed to register user for login test")
+            return False
+        
+        # Now test login with the registered user
         success, response = self.run_test(
             "User Login",
             "POST", 
             "auth/login",
             200,
             data={
-                "email": "test@istqb.com",
+                "email": test_email,
                 "password": "password123"
             }
         )
         
         if success and 'access_token' in response:
-            # Don't overwrite token from registration test
             print(f"   ✅ Login successful, token available")
             return True
         return False
