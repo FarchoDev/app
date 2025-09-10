@@ -230,22 +230,32 @@ async def update_progress(
     module_id: str, 
     progress_percentage: int, 
     time_spent: int,
+    section_id: Optional[str] = None,
     current_user: UserResponse = Depends(get_current_user)
 ):
-    # Update or create progress
+    # Get existing progress
+    existing_progress = await db.user_progress.find_one({
+        "user_id": current_user.id,
+        "module_id": module_id
+    })
+    
+    sections_completed = existing_progress.get('sections_completed', []) if existing_progress else []
+    
+    # Add section to completed if provided and not already there
+    if section_id and section_id not in sections_completed:
+        sections_completed.append(section_id)
+    
+    # Update progress data
     progress_data = {
         "user_id": current_user.id,
         "module_id": module_id,
         "progress_percentage": progress_percentage,
         "time_spent": time_spent,
         "completed": progress_percentage >= 100,
-        "last_accessed": datetime.now(timezone.utc)
+        "sections_completed": sections_completed,
+        "last_accessed": datetime.now(timezone.utc),
+        "last_section_accessed": section_id
     }
-    
-    existing_progress = await db.user_progress.find_one({
-        "user_id": current_user.id,
-        "module_id": module_id
-    })
     
     if existing_progress:
         await db.user_progress.update_one(
@@ -257,6 +267,59 @@ async def update_progress(
         await db.user_progress.insert_one(new_progress.dict())
     
     return {"message": "Progress updated successfully"}
+
+@api_router.post("/progress/{module_id}/section/{section_id}")
+async def mark_section_complete(
+    module_id: str,
+    section_id: str,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    """Mark a specific section as completed"""
+    existing_progress = await db.user_progress.find_one({
+        "user_id": current_user.id,
+        "module_id": module_id
+    })
+    
+    sections_completed = existing_progress.get('sections_completed', []) if existing_progress else []
+    
+    if section_id not in sections_completed:
+        sections_completed.append(section_id)
+    
+    # Get module to calculate progress percentage
+    module = await db.istqb_modules.find_one({"id": module_id})
+    if module:
+        total_sections = len(module.get('sections', []))
+        progress_percentage = round((len(sections_completed) / total_sections * 100)) if total_sections > 0 else 100
+    else:
+        progress_percentage = 100
+    
+    progress_data = {
+        "user_id": current_user.id,
+        "module_id": module_id,
+        "sections_completed": sections_completed,
+        "progress_percentage": progress_percentage,
+        "completed": progress_percentage >= 100,
+        "last_accessed": datetime.now(timezone.utc),
+        "last_section_accessed": section_id
+    }
+    
+    if existing_progress:
+        # Update existing progress
+        await db.user_progress.update_one(
+            {"user_id": current_user.id, "module_id": module_id},
+            {"$set": progress_data}
+        )
+    else:
+        # Create new progress
+        progress_data["time_spent"] = 0
+        progress_data["id"] = str(uuid.uuid4())
+        await db.user_progress.insert_one(progress_data)
+    
+    return {
+        "message": "Section marked as complete",
+        "progress_percentage": progress_percentage,
+        "sections_completed": len(sections_completed)
+    }
 
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
