@@ -130,6 +130,7 @@ const AuthPage = () => {
   
   const { login, register } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -148,6 +149,10 @@ const AuthPage = () => {
           title: isLogin ? "¡Bienvenido!" : "¡Cuenta creada!",
           description: isLogin ? "Has iniciado sesión correctamente" : "Tu cuenta ha sido creada exitosamente",
         });
+        // Force navigation after successful auth
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 100);
       } else {
         toast({
           title: "Error",
