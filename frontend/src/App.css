@@ -292,3 +292,82 @@ textarea:focus-visible {
     color: black !important;
   }
 }
+
+/* Custom styles for study content */
+.content-area {
+  line-height: 1.8;
+}
+
+.content-area h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem 0;
+  color: #1f2937;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.content-area h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.75rem 0;
+  color: #374151;
+}
+
+.content-area h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem 0;
+  color: #4b5563;
+}
+
+.content-area p {
+  margin: 0.75rem 0;
+  color: #374151;
+}
+
+.content-area ul, .content-area ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.content-area li {
+  margin: 0.25rem 0;
+  color: #374151;
+}
+
+.content-area code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+.content-area pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.content-area pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.content-area strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.content-area blockquote {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
