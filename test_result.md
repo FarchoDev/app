@@ -203,7 +203,7 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Dashboard con estadísticas, progreso y lista de módulos"
+        comment: "Dashboard con estadísticas, progreso y lista de módulos con navegación hacia estudio"
 
   - task: "UI moderna con Tailwind"
     implemented: true
@@ -216,6 +216,54 @@ frontend:
       - working: true
         agent: "main"
         comment: "Interfaz moderna con componentes UI de shadcn/ui"
+
+  - task: "Vista de estudio de módulos"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Componente StudyModule completo con navegación por secciones, progreso visual, y marcado de completado"
+
+  - task: "Sistema de progreso visual"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Sidebar con progreso del módulo, lista de secciones con estados, navegación entre secciones"
+
+  - task: "Enrutamiento y navegación"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Rutas para /study/:moduleId, navegación desde dashboard, botones de navegación entre secciones"
+
+  - task: "Renderizado de contenido de estudio"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.css"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Estilos CSS personalizados para renderizar contenido educativo (headings, listas, código, etc.)"
 
 metadata:
   created_by: "main_agent"
