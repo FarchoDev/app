@@ -1342,13 +1342,27 @@ const Dashboard = () => {
                         </div>
                       )}
                     </div>
-                    <Button 
-                      variant={isCompleted ? "secondary" : "default"}
-                      className="ml-4"
-                      onClick={() => navigate(`/study/${module.id}`)}
-                    >
-                      {isCompleted ? "Revisar" : "Estudiar"}
-                    </Button>
+                    <div className="flex space-x-2 ml-4">
+                      <Button 
+                        variant={isCompleted ? "secondary" : "default"}
+                        onClick={() => navigate(`/study/${module.id}`)}
+                      >
+                        {isCompleted ? "Revisar" : "Estudiar"}
+                      </Button>
+                      {quizzes.find(q => q.module_id === module.id) && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            const moduleQuiz = quizzes.find(q => q.module_id === module.id);
+                            if (moduleQuiz) {
+                              navigate(`/quiz/${moduleQuiz.id}`);
+                            }
+                          }}
+                        >
+                          Quiz
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
