@@ -107,7 +107,9 @@ class UserProgress(BaseModel):
     completed: bool = False
     progress_percentage: int = 0
     time_spent: int = 0  # in minutes
+    sections_completed: List[str] = Field(default_factory=list)  # List of section IDs
     last_accessed: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_section_accessed: Optional[str] = None
 
 # Auth Functions
 def verify_password(plain_password, hashed_password):
