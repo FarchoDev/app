@@ -366,8 +366,131 @@ async def startup_event():
                 "title": "1. Fundamentos de las Pruebas",
                 "description": "Introducción a los conceptos básicos de testing, terminología y principios fundamentales.",
                 "content": "En este módulo aprenderás los 7 principios fundamentales del testing, la diferencia entre errores, defectos y fallos, y la importancia del testing en el desarrollo de software.",
+                "sections": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "1.1 ¿Qué es el Testing?",
+                        "content": """
+# ¿Qué es el Testing?
+
+El testing de software es un proceso para evaluar y verificar que una aplicación de software hace lo que se supone que debe hacer. Los beneficios del testing incluyen:
+
+## Objetivos del Testing
+- **Prevenir defectos** mediante revisiones tempranas y análisis estático
+- **Verificar** que se cumplen todos los requisitos especificados
+- **Validar** que el sistema funciona como esperan los usuarios
+- **Construir confianza** en el nivel de calidad del componente o sistema
+- **Encontrar defectos** y fallas
+- **Proporcionar información** para la toma de decisiones
+- **Cumplir** con requisitos legales, contractuales o normativos
+
+## Diferencias Clave
+- **Error (Mistake)**: Acción humana que produce un resultado incorrecto
+- **Defecto (Defect/Bug)**: Falta o imperfección en el código
+- **Falla (Failure)**: Desviación del comportamiento esperado del sistema
+
+El testing y la depuración son procesos diferentes. El testing puede mostrar la presencia de defectos, pero no puede probar su ausencia.
+                        """,
+                        "order": 1
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "1.2 Los Siete Principios del Testing",
+                        "content": """
+# Los Siete Principios del Testing
+
+Los principios del testing proporcionan directrices generales comunes a todo tipo de testing.
+
+## 1. El Testing Muestra la Presencia de Defectos, No su Ausencia
+El testing puede mostrar que hay defectos presentes, pero no puede probar que no hay defectos.
+
+## 2. Testing Exhaustivo es Imposible
+Es imposible probar todo (todas las combinaciones de entradas y precondiciones), excepto en casos triviales.
+
+## 3. Testing Temprano Ahorra Tiempo y Dinero
+Las actividades de testing deben comenzar lo antes posible en el ciclo de vida del desarrollo.
+
+## 4. Los Defectos se Agrupan
+Un pequeño número de módulos contiene la mayoría de los defectos descubiertos durante las pruebas previas al lanzamiento.
+
+## 5. Cuidado con la Paradoja del Pesticida
+Si los mismos tests se repiten una y otra vez, eventualmente esos tests ya no encontrarán más defectos.
+
+## 6. El Testing Depende del Contexto
+El testing se hace de manera diferente en diferentes contextos.
+
+## 7. La Falacia de la Ausencia de Errores
+Encontrar y corregir defectos no ayuda si el sistema construido no cumple las expectativas del usuario.
+                        """,
+                        "order": 2
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "1.3 Proceso Fundamental de Testing",
+                        "content": """
+# Proceso Fundamental de Testing
+
+El proceso fundamental de testing consiste en las siguientes actividades principales:
+
+## Planificación del Testing
+- Definir objetivos del testing
+- Seleccionar enfoque del testing
+- Determinar recursos necesarios
+- Programar actividades de testing
+
+## Monitoreo y Control del Testing
+- Comparar progreso actual con el plan
+- Tomar acciones correctivas cuando sea necesario
+- Actualizar el plan basado en nueva información
+
+## Análisis del Testing
+- Analizar la base de testing
+- Identificar características a probar
+- Definir y priorizar condiciones de testing
+- Capturar trazabilidad bidireccional
+
+## Diseño del Testing
+- Diseñar y priorizar casos de testing
+- Identificar datos de testing necesarios
+- Diseñar el entorno de testing
+- Capturar trazabilidad bidireccional
+
+## Implementación del Testing
+- Desarrollar y priorizar procedimientos de testing
+- Crear suites de testing
+- Preparar datos de testing
+- Preparar el entorno de testing
+
+## Ejecución del Testing
+- Ejecutar suites de testing
+- Registrar resultados de la ejecución
+- Comparar resultados actuales con esperados
+- Reportar defectos
+- Re-ejecutar testing después de correcciones
+
+## Finalización del Testing
+- Verificar que todos los productos de trabajo entregables han sido entregados
+- Finalizar y archivar el entorno de testing
+- Entregar productos de trabajo de testing al equipo de mantenimiento
+- Analizar lecciones aprendidas
+                        """,
+                        "order": 3
+                    }
+                ],
                 "order": 1,
                 "estimated_time": 45,
+                "learning_objectives": [
+                    "Comprender qué es el testing y por qué es necesario",
+                    "Conocer los 7 principios fundamentales del testing",
+                    "Identificar las actividades del proceso de testing",
+                    "Distinguir entre errores, defectos y fallas"
+                ],
+                "key_concepts": [
+                    "Error, Defecto, Falla",
+                    "Los 7 principios del testing",
+                    "Proceso fundamental de testing",
+                    "Objetivos del testing"
+                ],
                 "created_at": datetime.now(timezone.utc)
             },
             {
@@ -375,8 +498,82 @@ async def startup_event():
                 "title": "2. Testing a lo largo del Ciclo de Vida del Software",
                 "description": "Cómo se integra el testing en diferentes modelos de ciclo de vida del desarrollo.",
                 "content": "Exploraremos cómo el testing se adapta a metodologías como Waterfall, Agile, y DevOps, y cómo las actividades de testing varían en cada fase.",
+                "sections": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "2.1 Modelos de Ciclo de Vida del Software",
+                        "content": """
+# Modelos de Ciclo de Vida del Software en Testing
+
+El testing debe adaptarse al modelo de ciclo de vida de desarrollo utilizado.
+
+## Modelo Secuencial (Waterfall)
+- **Características**: Fases secuenciales, documentación extensiva
+- **Testing**: Se realiza después del desarrollo
+- **Ventajas**: Planificación clara, fácil gestión
+- **Desventajas**: Detección tardía de defectos, poca flexibilidad
+
+## Modelo Iterativo e Incremental
+- **Características**: Desarrollo en iteraciones, entrega incremental
+- **Testing**: En cada iteración se testing y entrega funcionalidad
+- **Ventajas**: Feedback temprano, adaptabilidad
+- **Desventajas**: Requiere buena gestión de configuración
+
+## Modelo en V
+- **Características**: Para cada fase de desarrollo hay una fase de testing correspondiente
+- **Testing**: Planificación temprana, ejecución tardía
+- **Ventajas**: Planificación temprana del testing
+- **Desventajas**: Rigidez similar al modelo waterfall
+                        """,
+                        "order": 1
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "2.2 Niveles de Testing",
+                        "content": """
+# Niveles de Testing
+
+## Testing de Componente (Unit Testing)
+- **Objetivo**: Verificar componentes individuales aisladamente
+- **Alcance**: Funciones, objetos, clases
+- **Responsable**: Desarrolladores
+- **Herramientas**: Frameworks de unit testing
+
+## Testing de Integración
+- **Objetivo**: Verificar interfaces entre componentes
+- **Tipos**: Big Bang, Incremental (Top-down, Bottom-up)
+- **Alcance**: APIs, interfaces de base de datos
+- **Responsable**: Desarrolladores o testers
+
+## Testing de Sistema
+- **Objetivo**: Verificar el comportamiento del sistema completo
+- **Alcance**: Sistema completo en su entorno
+- **Tipos**: Funcional, no funcional
+- **Responsable**: Testers independientes
+
+## Testing de Aceptación
+- **Objetivo**: Verificar que el sistema cumple los requisitos del negocio
+- **Tipos**: Aceptación del usuario, aceptación del negocio, aceptación contractual
+- **Alcance**: Flujos de trabajo completos
+- **Responsable**: Usuarios finales, clientes
+                        """,
+                        "order": 2
+                    }
+                ],
                 "order": 2,
                 "estimated_time": 50,
+                "learning_objectives": [
+                    "Entender diferentes modelos de ciclo de vida",
+                    "Conocer los niveles de testing",
+                    "Saber cuándo aplicar cada tipo de testing",
+                    "Comprender el testing en metodologías ágiles"
+                ],
+                "key_concepts": [
+                    "Modelo en V",
+                    "Testing iterativo",
+                    "Niveles de testing",
+                    "Testing ágil"
+                ],
                 "created_at": datetime.now(timezone.utc)
             },
             {
@@ -384,8 +581,82 @@ async def startup_event():
                 "title": "3. Técnicas de Testing Estático",
                 "description": "Revisiones, walkthroughs, inspecciones y análisis estático de código.",
                 "content": "Aprende sobre las técnicas de testing que no requieren ejecutar el código, incluyendo revisiones formales e informales.",
+                "sections": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "3.1 Fundamentos del Testing Estático",
+                        "content": """
+# Testing Estático vs Testing Dinámico
+
+## Testing Estático
+- **Definición**: Examinar el código o documentación sin ejecutar el software
+- **Métodos**: Revisiones, walkthroughs, inspecciones, análisis estático
+- **Beneficios**: Detección temprana de defectos, costo-efectivo
+
+## Testing Dinámico  
+- **Definición**: Ejecutar el software con casos de testing
+- **Métodos**: Testing funcional y no funcional
+- **Beneficios**: Verificación del comportamiento real
+
+## Diferencias Clave
+- Testing estático encuentra **defectos directamente**
+- Testing dinámico encuentra **fallas** que indican defectos
+- Ambos son complementarios, no alternativos
+                        """,
+                        "order": 1
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "3.2 Proceso de Revisión",
+                        "content": """
+# Proceso de Revisión
+
+## Tipos de Revisión
+
+### Revisión Informal
+- Sin proceso formal
+- No requiere documentación
+- Pair programming, buddy checks
+
+### Walkthrough
+- Autor guía a los participantes
+- Escenarios de uso, dry runs
+- Puede ser formal o informal
+
+### Revisión Técnica
+- Revisores técnicos expertos
+- Sin gestor como líder
+- Puede incluir peers, expertos técnicos
+
+### Inspección
+- Proceso más formal
+- Roles definidos, métricas, checklists
+- Basada en reglas y checklists
+
+## Roles en la Revisión
+- **Autor**: Creador del producto de trabajo
+- **Gestor**: Planifica la revisión
+- **Facilitador**: Modera la reunión
+- **Revisor**: Identifica anomalías
+- **Secretario**: Documenta la reunión
+                        """,
+                        "order": 2
+                    }
+                ],
                 "order": 3,
                 "estimated_time": 40,
+                "learning_objectives": [
+                    "Distinguir entre testing estático y dinámico",
+                    "Conocer diferentes tipos de revisión",
+                    "Entender el proceso de revisión",
+                    "Aplicar técnicas de análisis estático"
+                ],
+                "key_concepts": [
+                    "Testing estático",
+                    "Tipos de revisión", 
+                    "Proceso de revisión",
+                    "Análisis estático de código"
+                ],
                 "created_at": datetime.now(timezone.utc)
             },
             {
@@ -393,8 +664,98 @@ async def startup_event():
                 "title": "4. Técnicas de Diseño de Pruebas",
                 "description": "Técnicas de caja negra, caja blanca y basadas en la experiencia.",
                 "content": "Domina las técnicas para diseñar casos de prueba efectivos, incluyendo partición de equivalencia, análisis de valores límite y más.",
+                "sections": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "4.1 Técnicas de Caja Negra",
+                        "content": """
+# Técnicas de Caja Negra (Black-box)
+
+Las técnicas de caja negra se basan en especificaciones, requisitos o funcionalidad, sin conocimiento de la estructura interna.
+
+## Partición de Equivalencia
+- **Concepto**: Dividir datos de entrada en particiones
+- **Objetivo**: Reducir número de casos de testing
+- **Aplicación**: Una prueba por partición válida, una por inválida
+
+### Ejemplo Práctico
+Para un campo edad (18-65 años):
+- Partición válida: 18-65
+- Particiones inválidas: <18, >65
+
+## Análisis de Valores Límite
+- **Concepto**: Probar valores en los límites de las particiones
+- **Razón**: Los defectos ocurren frecuentemente en los límites
+- **Aplicación**: Probar límite inferior, superior, y valores adyacentes
+
+### Ejemplo Práctico  
+Para rango 18-65:
+- Valores a probar: 17, 18, 19, 64, 65, 66
+
+## Tablas de Decisión
+- **Uso**: Cuando el comportamiento depende de combinaciones de condiciones
+- **Estructura**: Condiciones, acciones, reglas
+- **Beneficio**: Cobertura sistemática de combinaciones
+
+## Testing de Transición de Estados
+- **Aplicación**: Sistemas con estados y transiciones
+- **Elementos**: Estados, transiciones, eventos, acciones
+- **Cobertura**: Estados válidos, transiciones válidas, secuencias
+                        """,
+                        "order": 1
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "4.2 Técnicas de Caja Blanca",
+                        "content": """
+# Técnicas de Caja Blanca (White-box)
+
+Las técnicas de caja blanca se basan en la estructura interna del código.
+
+## Cobertura de Sentencias
+- **Objetivo**: Ejecutar todas las sentencias del código
+- **Medición**: % de sentencias ejecutadas
+- **Mínimo**: Nivel básico de cobertura
+
+## Cobertura de Decisiones/Ramas
+- **Objetivo**: Ejecutar todos los resultados posibles de decisiones
+- **Medición**: % de ramas ejecutadas  
+- **Superior**: Más fuerte que cobertura de sentencias
+
+## Cobertura de Condiciones
+- **Objetivo**: Probar cada condición booleana
+- **Aplicación**: Condiciones individuales dentro de decisiones
+- **Detalle**: Más granular que cobertura de decisiones
+
+## Ejemplo Práctico
+```python
+if (a > 5) and (b < 10):  # Decisión con 2 condiciones
+    statement1()          # Rama verdadera
+else:
+    statement2()          # Rama falsa
+```
+
+**Cobertura de sentencias**: Ejecutar statement1() O statement2()
+**Cobertura de decisiones**: Ejecutar AMBAS ramas
+**Cobertura de condiciones**: Probar a>5 (True/False) Y b<10 (True/False)
+                        """,
+                        "order": 2
+                    }
+                ],
                 "order": 4,
                 "estimated_time": 60,
+                "learning_objectives": [
+                    "Aplicar técnicas de caja negra",
+                    "Utilizar análisis de valores límite",
+                    "Crear tablas de decisión",
+                    "Entender cobertura de código"
+                ],
+                "key_concepts": [
+                    "Partición de equivalencia",
+                    "Valores límite",
+                    "Tablas de decisión",
+                    "Cobertura de código"
+                ],
                 "created_at": datetime.now(timezone.utc)
             },
             {
@@ -402,8 +763,100 @@ async def startup_event():
                 "title": "5. Gestión de las Pruebas",
                 "description": "Planificación, estimación, monitoreo y control de las actividades de testing.",
                 "content": "Aprende a crear planes de prueba, estimar esfuerzo, gestionar riesgos y reportar el progreso del testing.",
+                "sections": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "5.1 Organización del Testing",
+                        "content": """
+# Organización del Testing
+
+## Independencia del Testing
+- **Nivel 1**: Sin testers independientes (desarrolladores prueban su código)
+- **Nivel 2**: Testers independientes dentro del equipo de desarrollo  
+- **Nivel 3**: Equipo de testing independiente reportando a gestión del proyecto
+- **Nivel 4**: Testers independientes de organización externa
+
+## Beneficios de la Independencia
+- Reconocer diferentes tipos de fallas
+- Verificar asunciones hechas durante especificación e implementación
+- Perspectiva objetiva
+
+## Desventajas Potenciales
+- Aislamiento del equipo de desarrollo
+- Posible retraso en feedback
+- Desarrolladores pueden perder responsabilidad por calidad
+
+## Roles y Responsabilidades
+
+### Test Manager
+- Planificación general del testing
+- Escribir o revisar política y estrategia de testing
+- Coordinar el testing con gestores de proyecto, propietarios de producto
+
+### Tester
+- Revisar y contribuir a planes de testing
+- Analizar, revisar y evaluar requisitos y especificaciones
+- Diseñar, implementar y ejecutar casos de testing
+                        """,
+                        "order": 1
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "5.2 Planificación y Estimación",
+                        "content": """
+# Planificación y Estimación del Testing
+
+## Propósito y Contenido del Plan de Testing
+Un plan de testing documenta los medios y cronograma para alcanzar los objetivos de testing.
+
+### Contenido Típico:
+- **Alcance**: Qué será y no será probado
+- **Enfoque**: Niveles de testing, tipos de testing, técnicas
+- **Recursos**: Personas, herramientas, entorno
+- **Cronograma**: Cuándo ocurrirán las actividades de testing
+
+## Estrategia de Testing
+Define el enfoque general del testing para el proyecto.
+
+### Tipos de Estrategia:
+- **Analítica**: Basada en análisis de factores como requisitos o riesgos
+- **Basada en Modelos**: Basada en modelos del sistema
+- **Metódica**: Sistemática, usando checklists predefinidos
+- **Reactiva**: Reactiva a eventos durante ejecución del testing
+- **Dirigida**: Dirigida por stakeholders principales
+- **Regresiva**: Reutilización de material de testing existente
+
+## Técnicas de Estimación
+
+### Estimación Basada en Métricas
+- Usar datos históricos de proyectos similares
+- Métricas: productividad, ratios de defectos
+
+### Estimación Basada en Expertos
+- Consultar con expertos en el dominio
+- Técnica Wideband Delphi
+
+### Estimación de Tres Puntos
+- Optimista, pesimista, más probable
+- Fórmula: (Optimista + 4*Más Probable + Pesimista) / 6
+                        """,
+                        "order": 2
+                    }
+                ],
                 "order": 5,
                 "estimated_time": 55,
+                "learning_objectives": [
+                    "Entender organización del testing",
+                    "Crear planes de testing efectivos",
+                    "Aplicar técnicas de estimación",
+                    "Gestionar riesgos del testing"
+                ],
+                "key_concepts": [
+                    "Independencia del testing",
+                    "Plan de testing",
+                    "Estrategia de testing",
+                    "Estimación de esfuerzo"
+                ],
                 "created_at": datetime.now(timezone.utc)
             },
             {
@@ -411,8 +864,96 @@ async def startup_event():
                 "title": "6. Herramientas para el Testing",
                 "description": "Clasificación y uso de herramientas de apoyo al testing.",
                 "content": "Conoce las diferentes categorías de herramientas de testing y cómo pueden mejorar la eficiencia y efectividad de tus pruebas.",
+                "sections": [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "6.1 Clasificación de Herramientas",
+                        "content": """
+# Clasificación de Herramientas de Testing
+
+## Herramientas de Gestión de Testing
+- **Test Management Tools**: Planificación, seguimiento, gestión de casos
+- **ALM Tools**: Application Lifecycle Management
+- **Ejemplos**: TestRail, Zephyr, Azure DevOps
+
+## Herramientas de Testing Estático
+- **Análisis Estático**: Revisión automatizada de código
+- **Linters**: Verificación de estándares de codificación  
+- **Ejemplos**: SonarQube, ESLint, Checkstyle
+
+## Herramientas de Diseño e Implementación
+- **Model-Based Testing**: Generación desde modelos
+- **Test Data Preparation**: Creación de datos de testing
+- **Ejemplos**: Conformiq, Toad Data Point
+
+## Herramientas de Ejecución y Logging
+- **Test Execution**: Automatización de ejecución
+- **Test Harnesses**: Frameworks de ejecución
+- **Comparadores**: Verificación de resultados
+- **Coverage Tools**: Medición de cobertura
+
+## Herramientas de Rendimiento y Monitoreo
+- **Load Testing**: Simulación de carga
+- **Performance Monitoring**: Monitoreo en tiempo real
+- **Ejemplos**: JMeter, LoadRunner, New Relic
+                        """,
+                        "order": 1
+                    },
+                    {
+                        "id": str(uuid.uuid4()),
+                        "title": "6.2 Beneficios y Riesgos de la Automatización",
+                        "content": """
+# Automatización del Testing
+
+## Beneficios de la Automatización
+- **Eficiencia**: Ejecución más rápida de tests repetitivos
+- **Consistencia**: Ejecución idéntica cada vez
+- **Cobertura**: Posibilidad de mayor cobertura
+- **Reutilización**: Scripts reutilizables
+- **Precisión**: Reducción de errores humanos
+
+## Limitaciones y Riesgos
+- **Inversión Inicial**: Costo alto de implementación
+- **Mantenimiento**: Scripts requieren actualización constante
+- **Falsa Seguridad**: Automatización no garantiza calidad
+- **Herramientas Complejas**: Curva de aprendizaje
+- **No Todo es Automatizable**: Usabilidad, experiencia de usuario
+
+## Factores de Éxito para Automatización
+- **Tests Repetitivos**: Alto valor para automatización
+- **Casos Estables**: Funcionalidad que no cambia frecuentemente
+- **Datos Consistentes**: Disponibilidad de datos de testing
+- **ROI Claro**: Retorno de inversión justificable
+
+## Pirámide de Testing
+- **Base**: Unit Tests (muchos, rápidos, baratos)
+- **Medio**: Integration Tests (algunos, moderados)  
+- **Tope**: UI Tests (pocos, lentos, caros)
+
+## Estrategia de Automatización
+1. **Evaluar** aplicación y casos de testing
+2. **Seleccionar** herramient apropiada
+3. **Diseñar** arquitectura de automatización
+4. **Implementar** scripts mantenibles
+5. **Ejecutar** y mantener suite de testing
+                        """,
+                        "order": 2
+                    }
+                ],
                 "order": 6,
                 "estimated_time": 35,
+                "learning_objectives": [
+                    "Clasificar herramientas de testing",
+                    "Evaluar beneficios de automatización",
+                    "Seleccionar herramientas apropiadas",
+                    "Implementar estrategia de automatización"
+                ],
+                "key_concepts": [
+                    "Tipos de herramientas",
+                    "Automatización de testing",
+                    "ROI de automatización",
+                    "Pirámide de testing"
+                ],
                 "created_at": datetime.now(timezone.utc)
             }
         ]
