@@ -56,7 +56,7 @@ JWT_SECRET_KEY="your-super-secret-jwt-key-change-in-production-istqb-2024"
 
 **Frontend (.env)**
 ```env
-REACT_APP_BACKEND_URL=https://testcert-hub-1.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://istqb-trainer-1.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 ```
 
