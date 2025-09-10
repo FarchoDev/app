@@ -72,21 +72,33 @@ class Token(BaseModel):
     user: UserResponse
 
 # ISTQB Module Models
+class ISTQBModuleSection(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    content: str
+    order: int
+
 class ISTQBModule(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     description: str
     content: str
+    sections: List[ISTQBModuleSection] = Field(default_factory=list)
     order: int
     estimated_time: int  # in minutes
+    learning_objectives: List[str] = Field(default_factory=list)
+    key_concepts: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ISTQBModuleCreate(BaseModel):
     title: str
     description: str
     content: str
+    sections: List[ISTQBModuleSection] = Field(default_factory=list)
     order: int
     estimated_time: int
+    learning_objectives: List[str] = Field(default_factory=list)
+    key_concepts: List[str] = Field(default_factory=list)
 
 class UserProgress(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
