@@ -111,6 +111,82 @@ class UserProgress(BaseModel):
     last_accessed: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_section_accessed: Optional[str] = None
 
+# Quiz Models
+class QuestionOption(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    text: str
+    is_correct: bool
+    explanation: Optional[str] = None
+
+class Question(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    module_id: str
+    section_id: Optional[str] = None
+    question_text: str
+    question_type: str = "multiple_choice"  # multiple_choice, true_false
+    options: List[QuestionOption]
+    difficulty: str = "medium"  # easy, medium, hard
+    topic: str  # topic/theme within the module
+    explanation: str  # General explanation of the concept
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class QuestionCreate(BaseModel):
+    module_id: str
+    section_id: Optional[str] = None
+    question_text: str
+    question_type: str = "multiple_choice"
+    options: List[QuestionOption]
+    difficulty: str = "medium"
+    topic: str
+    explanation: str
+
+class Quiz(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: str
+    module_id: Optional[str] = None  # None for general/mixed quizzes
+    quiz_type: str  # "practice", "module_test", "final_exam"
+    question_ids: List[str]
+    time_limit: Optional[int] = None  # in minutes, None for no limit
+    passing_score: int = 70  # percentage
+    randomize_questions: bool = True
+    randomize_options: bool = True
+    show_results_immediately: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class QuizCreate(BaseModel):
+    title: str
+    description: str
+    module_id: Optional[str] = None
+    quiz_type: str
+    question_ids: List[str]
+    time_limit: Optional[int] = None
+    passing_score: int = 70
+    randomize_questions: bool = True
+    randomize_options: bool = True
+    show_results_immediately: bool = True
+
+class QuizAttempt(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    quiz_id: str
+    answers: dict  # {question_id: selected_option_id}
+    score: Optional[int] = None  # percentage
+    passed: Optional[bool] = None
+    time_taken: Optional[int] = None  # in seconds
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+    is_completed: bool = False
+
+class QuizAnswer(BaseModel):
+    question_id: str
+    selected_option_id: str
+
+class QuizSubmission(BaseModel):
+    quiz_id: str
+    answers: List[QuizAnswer]
+    time_taken: Optional[int] = None  # in seconds
+
 # Auth Functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
