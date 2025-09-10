@@ -350,8 +350,12 @@ def main():
         ("User Login", tester.test_user_login),
         ("Protected Endpoint", tester.test_protected_endpoint),
         ("Get Modules", tester.test_get_modules),
+        ("Get Specific Module", tester.test_get_specific_module),
         ("Dashboard Stats", tester.test_dashboard_stats),
         ("User Progress", tester.test_user_progress),
+        ("Mark Section Complete", tester.test_mark_section_complete),
+        ("Update Module Progress", tester.test_update_module_progress),
+        ("Progress Calculation Accuracy", tester.test_progress_calculation_accuracy),
     ]
     
     print(f"\n📋 Running {len(tests)} test categories...")
