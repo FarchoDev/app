@@ -609,6 +609,538 @@ const StudyModule = () => {
     </div>
   );
 };
+
+// Quiz Component
+const Quiz = () => {
+  const { quizId } = useParams();
+  const [quiz, setQuiz] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [startTime, setStartTime] = useState(null);
+  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState(null);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (quizId) {
+      fetchQuizData();
+    }
+  }, [quizId]);
+
+  // Timer effect
+  useEffect(() => {
+    if (timeLeft > 0 && quizStarted && !showResults) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && quizStarted) {
+      handleSubmitQuiz();
+    }
+  }, [timeLeft, quizStarted, showResults]);
+
+  const fetchQuizData = async () => {
+    try {
+      const response = await axios.get(`${API}/quizzes/${quizId}/questions`);
+      setQuiz(response.data.quiz);
+      setQuestions(response.data.questions);
+      
+      if (response.data.quiz.time_limit) {
+        setTimeLeft(response.data.quiz.time_limit * 60); // Convert to seconds
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el cuestionario",
+        variant: "destructive",
+      });
+      navigate('/');
+    }
+  };
+
+  const startQuiz = async () => {
+    try {
+      await axios.post(`${API}/quizzes/${quizId}/attempt`);
+      setQuizStarted(true);
+      setStartTime(Date.now());
+      
+      toast({
+        title: "¡Cuestionario iniciado!",
+        description: "Buena suerte con tu examen",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar el cuestionario",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAnswerSelect = (questionId, optionId) => {
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionId]: optionId
+    }));
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!quizStarted) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const answers = Object.entries(selectedAnswers).map(([questionId, selectedOptionId]) => ({
+        question_id: questionId,
+        selected_option_id: selectedOptionId
+      }));
+
+      const timeTaken = startTime ? Math.floor((Date.now() - startTime) / 1000) : null;
+
+      const response = await axios.post(`${API}/quizzes/${quizId}/submit`, {
+        quiz_id: quizId,
+        answers,
+        time_taken: timeTaken
+      });
+
+      setResults(response.data);
+      setShowResults(true);
+      
+      toast({
+        title: response.data.passed ? "¡Aprobado!" : "No aprobado",
+        description: `Tu puntuación: ${response.data.score}%`,
+        variant: response.data.passed ? "default" : "destructive"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo enviar el cuestionario",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const getAnsweredCount = () => {
+    return Object.keys(selectedAnswers).length;
+  };
+
+  if (!quiz) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Cargando cuestionario...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Quiz start screen
+  if (!quizStarted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/')}
+                  className="mr-4"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+                <div className="h-10 w-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mr-3">
+                  <Brain className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">Cuestionario ISTQB</h1>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto h-16 w-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mb-4">
+                <Brain className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl">{quiz.title}</CardTitle>
+              <CardDescription className="text-lg mt-2">
+                {quiz.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <HelpCircle className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-blue-900">{questions.length}</p>
+                  <p className="text-sm text-blue-700">Preguntas</p>
+                </div>
+                
+                {quiz.time_limit && (
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <Timer className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-orange-900">{quiz.time_limit}</p>
+                    <p className="text-sm text-orange-700">minutos</p>
+                  </div>
+                )}
+                
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <Target className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-green-900">{quiz.passing_score}%</p>
+                  <p className="text-sm text-green-700">para aprobar</p>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Instrucciones:</h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Lee cada pregunta cuidadosamente</li>
+                  <li>• Selecciona la mejor respuesta para cada pregunta</li>
+                  <li>• Puedes navegar entre preguntas usando los botones</li>
+                  {quiz.time_limit && (
+                    <li>• Tienes {quiz.time_limit} minutos para completar el cuestionario</li>
+                  )}
+                  <li>• Puedes revisar y cambiar tus respuestas antes de enviar</li>
+                  <li>• Una vez enviado, no podrás modificar las respuestas</li>
+                </ul>
+              </div>
+
+              <div className="text-center">
+                <Button 
+                  onClick={startQuiz}
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  <PlayCircle className="h-5 w-5 mr-2" />
+                  Comenzar Cuestionario
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Results screen
+  if (showResults && results) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/')}
+                  className="mr-4"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+                <div className="h-10 w-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mr-3">
+                  <Brain className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">Resultados del Cuestionario</h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Results Summary */}
+          <Card className="mb-6">
+            <CardHeader className="text-center">
+              <div className={`mx-auto h-16 w-16 rounded-xl flex items-center justify-center mb-4 ${
+                results.passed 
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600' 
+                  : 'bg-gradient-to-r from-red-600 to-pink-600'
+              }`}>
+                {results.passed ? (
+                  <CheckCircle2 className="h-8 w-8 text-white" />
+                ) : (
+                  <AlertCircle className="h-8 w-8 text-white" />
+                )}
+              </div>
+              <CardTitle className={`text-3xl ${results.passed ? 'text-green-900' : 'text-red-900'}`}>
+                {results.passed ? '¡Aprobado!' : 'No Aprobado'}
+              </CardTitle>
+              <CardDescription className="text-xl mt-2">
+                Puntuación: {results.score}%
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-900">{results.correct_answers}</p>
+                  <p className="text-sm text-blue-700">Correctas</p>
+                </div>
+                <div className="p-4 bg-red-50 rounded-lg">
+                  <p className="text-2xl font-bold text-red-900">{results.total_questions - results.correct_answers}</p>
+                  <p className="text-sm text-red-700">Incorrectas</p>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-900">{results.total_questions}</p>
+                  <p className="text-sm text-purple-700">Total</p>
+                </div>
+                <div className="p-4 bg-orange-50 rounded-lg">
+                  <p className="text-2xl font-bold text-orange-900">
+                    {results.time_taken ? Math.floor(results.time_taken / 60) : 0}:{(results.time_taken % 60).toString().padStart(2, '0')}
+                  </p>
+                  <p className="text-sm text-orange-700">Tiempo</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Detailed Results */}
+          {results.detailed_results && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Revisión Detallada</CardTitle>
+                <CardDescription>
+                  Revisa tus respuestas y aprende de los errores
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {results.detailed_results.map((result, index) => (
+                    <div key={result.question_id} className="border-b pb-6 last:border-b-0">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-lg">
+                          Pregunta {index + 1}
+                        </h3>
+                        <Badge 
+                          variant={result.is_correct ? "success" : "destructive"}
+                          className={result.is_correct ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                        >
+                          {result.is_correct ? "Correcta" : "Incorrecta"}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-gray-900 mb-4">{result.question_text}</p>
+                      
+                      <div className="space-y-2">
+                        {result.options.map((option) => {
+                          const isSelected = option.id === result.selected_option_id;
+                          const isCorrect = option.id === result.correct_option_id;
+                          
+                          return (
+                            <div
+                              key={option.id}
+                              className={`p-3 rounded-lg border ${
+                                isCorrect
+                                  ? 'bg-green-50 border-green-300'
+                                  : isSelected
+                                  ? 'bg-red-50 border-red-300'
+                                  : 'bg-gray-50 border-gray-200'
+                              }`}
+                            >
+                              <div className="flex items-center">
+                                {isCorrect && (
+                                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                                )}
+                                {isSelected && !isCorrect && (
+                                  <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                                )}
+                                <span className={`${
+                                  isCorrect ? 'text-green-800 font-medium' : 
+                                  isSelected ? 'text-red-800' : 'text-gray-700'
+                                }`}>
+                                  {option.text}
+                                </span>
+                              </div>
+                              {(isSelected || isCorrect) && option.explanation && (
+                                <p className="text-sm text-gray-600 mt-2 ml-7">
+                                  {option.explanation}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {result.explanation && (
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <strong>Explicación:</strong> {result.explanation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Quiz taking screen
+  const currentQ = questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / questions.length) * 100;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <div className="h-10 w-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mr-3">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{quiz.title}</h1>
+                <p className="text-sm text-gray-600">
+                  Pregunta {currentQuestion + 1} de {questions.length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {timeLeft !== null && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  timeLeft < 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                }`}>
+                  <Timer className="h-4 w-4 inline mr-1" />
+                  {formatTime(timeLeft)}
+                </div>
+              )}
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {getAnsweredCount()}/{questions.length} respondidas
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="pb-4">
+            <Progress value={progress} className="h-2" />
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Question Card */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              {currentQ.question_text}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {currentQ.options.map((option) => (
+                <div
+                  key={option.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    selectedAnswers[currentQ.id] === option.id
+                      ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-500'
+                      : 'hover:bg-gray-50 border-gray-200'
+                  }`}
+                  onClick={() => handleAnswerSelect(currentQ.id, option.id)}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full border-2 mr-3 ${
+                      selectedAnswers[currentQ.id] === option.id
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedAnswers[currentQ.id] === option.id && (
+                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                      )}
+                    </div>
+                    <span className="text-gray-900">{option.text}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Navigation */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+            disabled={currentQuestion === 0}
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Anterior
+          </Button>
+          
+          <div className="flex space-x-2">
+            {questions.map((_, index) => (
+              <button
+                key={index}
+                className={`w-8 h-8 rounded-full text-sm font-medium ${
+                  index === currentQuestion
+                    ? 'bg-blue-600 text-white'
+                    : selectedAnswers[questions[index].id]
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+                onClick={() => setCurrentQuestion(index)}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+          
+          {currentQuestion === questions.length - 1 ? (
+            <Button
+              onClick={handleSubmitQuiz}
+              disabled={isSubmitting || getAnsweredCount() === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isSubmitting ? 'Enviando...' : 'Finalizar Cuestionario'}
+              <CheckCircle className="h-4 w-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}
+              disabled={currentQuestion === questions.length - 1}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [modules, setModules] = useState([]);
