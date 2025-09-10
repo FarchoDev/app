@@ -615,6 +615,7 @@ const Dashboard = () => {
   const [progress, setProgress] = useState([]);
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
