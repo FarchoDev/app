@@ -264,7 +264,351 @@ const AuthPage = () => {
   );
 };
 
-// Dashboard Components
+// Study Module Component
+const StudyModule = () => {
+  const { moduleId } = useParams();
+  const [module, setModule] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [currentSection, setCurrentSection] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [startTime] = useState(Date.now());
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchModuleData();
+  }, [moduleId]);
+
+  const fetchModuleData = async () => {
+    try {
+      const [moduleRes, progressRes] = await Promise.all([
+        axios.get(`${API}/modules/${moduleId}`),
+        axios.get(`${API}/progress`)
+      ]);
+      
+      setModule(moduleRes.data);
+      const moduleProgress = progressRes.data.find(p => p.module_id === moduleId);
+      setProgress(moduleProgress || { sections_completed: [], progress_percentage: 0 });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el módulo",
+        variant: "destructive",
+      });
+      navigate('/');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markSectionComplete = async (sectionId) => {
+    try {
+      const response = await axios.post(`${API}/progress/${moduleId}/section/${sectionId}`);
+      
+      // Update local progress
+      setProgress(prev => ({
+        ...prev,
+        sections_completed: [...(prev.sections_completed || []), sectionId],
+        progress_percentage: response.data.progress_percentage
+      }));
+
+      toast({
+        title: "¡Sección completada!",
+        description: `Progreso: ${response.data.progress_percentage}%`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo marcar la sección como completada",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateTimeSpent = async () => {
+    const timeSpent = Math.floor((Date.now() - startTime) / 60000); // Convert to minutes
+    if (timeSpent > 0) {
+      try {
+        await axios.post(`${API}/progress/${moduleId}?progress_percentage=${progress?.progress_percentage || 0}&time_spent=${timeSpent}`);
+      } catch (error) {
+        console.error('Error updating time spent:', error);
+      }
+    }
+  };
+
+  // Update time spent when component unmounts
+  useEffect(() => {
+    return () => {
+      updateTimeSpent();
+    };
+  }, []);
+
+  const nextSection = () => {
+    if (currentSection < module.sections.length - 1) {
+      setCurrentSection(currentSection + 1);
+    }
+  };
+
+  const prevSection = () => {
+    if (currentSection > 0) {
+      setCurrentSection(currentSection - 1);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Cargando módulo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!module) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p>Módulo no encontrado</p>
+          <Button onClick={() => navigate('/')} className="mt-4">
+            Volver al Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentSectionData = module.sections[currentSection];
+  const isSectionCompleted = progress?.sections_completed?.includes(currentSectionData.id);
+  const completedSections = progress?.sections_completed?.length || 0;
+  const totalSections = module.sections.length;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/')}
+                className="mr-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+              <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mr-3">
+                <BookOpen className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{module.title}</h1>
+                <p className="text-sm text-gray-600">
+                  Sección {currentSection + 1} de {totalSections} • {completedSections}/{totalSections} completadas
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
+                <p className="text-xs text-gray-500">Progreso: {progress?.progress_percentage || 0}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar - Progress & Navigation */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-8">
+              <CardHeader>
+                <CardTitle className="text-lg">Progreso del Módulo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Completado</span>
+                      <span>{progress?.progress_percentage || 0}%</span>
+                    </div>
+                    <Progress value={progress?.progress_percentage || 0} className="h-2" />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h4 className="font-semibold mb-3">Secciones</h4>
+                    <div className="space-y-2">
+                      {module.sections.map((section, index) => {
+                        const isCompleted = progress?.sections_completed?.includes(section.id);
+                        const isCurrent = index === currentSection;
+                        
+                        return (
+                          <div
+                            key={section.id}
+                            className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${
+                              isCurrent 
+                                ? 'bg-blue-100 border border-blue-300' 
+                                : 'hover:bg-gray-100'
+                            }`}
+                            onClick={() => setCurrentSection(index)}
+                          >
+                            <div className="mr-3">
+                              {isCompleted ? (
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <div className={`h-5 w-5 rounded-full border-2 ${
+                                  isCurrent ? 'border-blue-600' : 'border-gray-300'
+                                }`} />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className={`text-sm font-medium ${
+                                isCurrent ? 'text-blue-900' : 'text-gray-900'
+                              }`}>
+                                {section.title}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>{module.estimated_time} min estimados</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Award className="h-4 w-4 mr-2" />
+                      <span>{module.learning_objectives?.length || 0} objetivos</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-2xl">{currentSectionData.title}</CardTitle>
+                    <CardDescription className="mt-2">
+                      Sección {currentSection + 1} de {totalSections}
+                    </CardDescription>
+                  </div>
+                  {!isSectionCompleted && (
+                    <Button
+                      onClick={() => markSectionComplete(currentSectionData.id)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Marcar Completada
+                    </Button>
+                  )}
+                  {isSectionCompleted && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Completada
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="prose prose-lg max-w-none">
+                  <div 
+                    className="content-area"
+                    dangerouslySetInnerHTML={{ 
+                      __html: currentSectionData.content.replace(/\n/g, '<br>').replace(/## /g, '<h2>').replace(/### /g, '<h3>').replace(/# /g, '<h1>') 
+                    }} 
+                  />
+                </div>
+                
+                {/* Navigation */}
+                <div className="flex justify-between items-center mt-8 pt-6 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={prevSection}
+                    disabled={currentSection === 0}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Anterior
+                  </Button>
+                  
+                  <span className="text-sm text-gray-500">
+                    {currentSection + 1} de {totalSections}
+                  </span>
+                  
+                  {currentSection < totalSections - 1 ? (
+                    <Button onClick={nextSection}>
+                      Siguiente
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => navigate('/')}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Completar Módulo
+                      <CheckCircle className="h-4 w-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Module Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Objetivos de Aprendizaje</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {module.learning_objectives?.map((objective, index) => (
+                      <li key={index} className="flex items-start">
+                        <div className="h-2 w-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{objective}</span>
+                      </li>
+                    )) || <li>No hay objetivos definidos</li>}
+                  </ul>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conceptos Clave</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {module.key_concepts?.map((concept, index) => (
+                      <Badge key={index} variant="secondary">
+                        {concept}
+                      </Badge>
+                    )) || <span className="text-sm text-gray-500">No hay conceptos definidos</span>}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [modules, setModules] = useState([]);
