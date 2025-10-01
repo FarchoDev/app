@@ -469,6 +469,9 @@ async def get_dashboard_stats(current_user: UserResponse = Depends(get_current_u
     completed_modules = len([p for p in user_progress if p.get('completed', False)])
     total_time_spent = sum([p.get('time_spent', 0) for p in user_progress])
     
+    # Get document stats
+    total_documents = await db.documents.count_documents({"uploaded_by": current_user.id})
+    
     # Quiz statistics
     total_quizzes_taken = len(quiz_attempts)
     average_score = round(sum([attempt.get('score', 0) for attempt in quiz_attempts]) / total_quizzes_taken) if total_quizzes_taken > 0 else 0
