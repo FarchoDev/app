@@ -486,6 +486,68 @@ async def get_dashboard_stats(current_user: UserResponse = Depends(get_current_u
         "average_quiz_score": average_score
     }
 
+# Document Category Routes
+@api_router.get("/categories", response_model=List[DocumentCategory])
+async def get_categories(current_user: UserResponse = Depends(get_current_user)):
+    categories = await db.document_categories.find({"created_by": current_user.id}).to_list(1000)
+    return [DocumentCategory(**cat) for cat in categories]
+
+@api_router.post("/categories", response_model=DocumentCategory)
+async def create_category(
+    category: DocumentCategoryCreate, 
+    current_user: UserResponse = Depends(get_current_user)
+):
+    new_category = DocumentCategory(**category.dict(), created_by=current_user.id)
+    await db.document_categories.insert_one(new_category.dict())
+    return new_category
+
+@api_router.put("/categories/{category_id}", response_model=DocumentCategory)
+async def update_category(
+    category_id: str,
+    category: DocumentCategoryCreate,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    existing_category = await db.document_categories.find_one({
+        "id": category_id,
+        "created_by": current_user.id
+    })
+    
+    if not existing_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    updated_data = category.dict()
+    await db.document_categories.update_one(
+        {"id": category_id},
+        {"$set": updated_data}
+    )
+    
+    updated_category = DocumentCategory(**{**existing_category, **updated_data})
+    return updated_category
+
+@api_router.delete("/categories/{category_id}")
+async def delete_category(
+    category_id: str,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    category = await db.document_categories.find_one({
+        "id": category_id,
+        "created_by": current_user.id
+    })
+    
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Check if category has documents
+    documents_count = await db.documents.count_documents({"category_id": category_id})
+    if documents_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete category with {documents_count} documents. Move or delete documents first."
+        )
+    
+    await db.document_categories.delete_one({"id": category_id})
+    return {"message": "Category deleted successfully"}
+
 # Quiz Routes
 @api_router.get("/questions", response_model=List[Question])
 async def get_questions(module_id: Optional[str] = None, difficulty: Optional[str] = None):
