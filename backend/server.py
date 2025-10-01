@@ -548,6 +548,228 @@ async def delete_category(
     await db.document_categories.delete_one({"id": category_id})
     return {"message": "Category deleted successfully"}
 
+# Document Management Routes
+@api_router.get("/documents", response_model=List[DocumentResponse])
+async def get_documents(
+    category_id: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    # Build query
+    query = {"uploaded_by": current_user.id}
+    if category_id:
+        query["category_id"] = category_id
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"tags": {"$regex": search, "$options": "i"}}
+        ]
+    
+    documents = await db.documents.find(query).sort("created_at", -1).to_list(1000)
+    
+    # Enrich with category names
+    result = []
+    for doc in documents:
+        doc_response = DocumentResponse(**doc)
+        if doc.get("category_id"):
+            category = await db.document_categories.find_one({"id": doc["category_id"]})
+            if category:
+                doc_response.category_name = category["name"]
+        result.append(doc_response)
+    
+    return result
+
+@api_router.post("/documents/upload", response_model=DocumentResponse)
+async def upload_document(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    description: Optional[str] = Form(None),
+    category_id: Optional[str] = Form(None),
+    tags: str = Form(""),  # Comma-separated tags
+    is_public: bool = Form(False),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    # Validate file type
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    # Create unique filename
+    file_id = str(uuid.uuid4())
+    file_extension = ".pdf"
+    unique_filename = f"{file_id}{file_extension}"
+    
+    # Save file
+    file_path = UPLOAD_DIR / unique_filename
+    
+    try:
+        async with aiofiles.open(file_path, 'wb') as f:
+            content = await file.read()
+            await f.write(content)
+        
+        # Parse tags
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()] if tags else []
+        
+        # Create document record
+        document_data = {
+            "id": str(uuid.uuid4()),
+            "filename": unique_filename,
+            "original_filename": file.filename,
+            "title": title,
+            "description": description,
+            "file_size": len(content),
+            "file_path": str(file_path),
+            "mime_type": file.content_type or "application/pdf",
+            "category_id": category_id,
+            "tags": tag_list,
+            "uploaded_by": current_user.id,
+            "created_at": datetime.now(timezone.utc),
+            "download_count": 0,
+            "is_public": is_public
+        }
+        
+        # Validate category exists if provided
+        if category_id:
+            category = await db.document_categories.find_one({
+                "id": category_id,
+                "created_by": current_user.id
+            })
+            if not category:
+                # Clean up uploaded file
+                if file_path.exists():
+                    file_path.unlink()
+                raise HTTPException(status_code=400, detail="Invalid category")
+        
+        await db.documents.insert_one(document_data)
+        
+        # Create response
+        doc_response = DocumentResponse(**document_data)
+        if category_id:
+            category = await db.document_categories.find_one({"id": category_id})
+            if category:
+                doc_response.category_name = category["name"]
+        
+        return doc_response
+    
+    except Exception as e:
+        # Clean up file if error occurred
+        if file_path.exists():
+            file_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
+
+@api_router.get("/documents/{document_id}")
+async def download_document(
+    document_id: str,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    document = await db.documents.find_one({
+        "id": document_id,
+        "$or": [
+            {"uploaded_by": current_user.id},
+            {"is_public": True}
+        ]
+    })
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    file_path = Path(document["file_path"])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    # Update download count and last accessed
+    await db.documents.update_one(
+        {"id": document_id},
+        {
+            "$inc": {"download_count": 1},
+            "$set": {"last_accessed": datetime.now(timezone.utc)}
+        }
+    )
+    
+    return FileResponse(
+        path=file_path,
+        filename=document["original_filename"],
+        media_type=document["mime_type"]
+    )
+
+@api_router.put("/documents/{document_id}", response_model=DocumentResponse)
+async def update_document(
+    document_id: str,
+    title: str = Form(...),
+    description: Optional[str] = Form(None),
+    category_id: Optional[str] = Form(None),
+    tags: str = Form(""),
+    is_public: bool = Form(False),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    document = await db.documents.find_one({
+        "id": document_id,
+        "uploaded_by": current_user.id
+    })
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Validate category if provided
+    if category_id:
+        category = await db.document_categories.find_one({
+            "id": category_id,
+            "created_by": current_user.id
+        })
+        if not category:
+            raise HTTPException(status_code=400, detail="Invalid category")
+    
+    # Parse tags
+    tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()] if tags else []
+    
+    # Update document
+    update_data = {
+        "title": title,
+        "description": description,
+        "category_id": category_id,
+        "tags": tag_list,
+        "is_public": is_public
+    }
+    
+    await db.documents.update_one(
+        {"id": document_id},
+        {"$set": update_data}
+    )
+    
+    # Get updated document
+    updated_doc = await db.documents.find_one({"id": document_id})
+    doc_response = DocumentResponse(**updated_doc)
+    
+    if category_id:
+        category = await db.document_categories.find_one({"id": category_id})
+        if category:
+            doc_response.category_name = category["name"]
+    
+    return doc_response
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(
+    document_id: str,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    document = await db.documents.find_one({
+        "id": document_id,
+        "uploaded_by": current_user.id
+    })
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Delete file from disk
+    file_path = Path(document["file_path"])
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Delete from database
+    await db.documents.delete_one({"id": document_id})
+    
+    return {"message": "Document deleted successfully"}
+
 # Quiz Routes
 @api_router.get("/questions", response_model=List[Question])
 async def get_questions(module_id: Optional[str] = None, difficulty: Optional[str] = None):
