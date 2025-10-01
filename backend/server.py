@@ -480,6 +480,7 @@ async def get_dashboard_stats(current_user: UserResponse = Depends(get_current_u
         "total_modules": total_modules,
         "completed_modules": completed_modules,
         "total_time_spent": total_time_spent,
+        "total_documents": total_documents,
         "completion_percentage": round((completed_modules / total_modules * 100) if total_modules > 0 else 0, 1),
         "total_quizzes_taken": total_quizzes_taken,
         "average_quiz_score": average_score
