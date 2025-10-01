@@ -118,6 +118,61 @@ class UserProgress(BaseModel):
     last_accessed: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_section_accessed: Optional[str] = None
 
+# Document Management Models
+class DocumentCategory(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    color: str = "#3B82F6"  # Default blue color
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DocumentCategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: str = "#3B82F6"
+
+class Document(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    original_filename: str
+    title: str
+    description: Optional[str] = None
+    file_size: int  # in bytes
+    file_path: str
+    mime_type: str = "application/pdf"
+    category_id: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    uploaded_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_accessed: Optional[datetime] = None
+    download_count: int = 0
+    is_public: bool = False
+
+class DocumentCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    category_id: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    is_public: bool = False
+
+class DocumentResponse(BaseModel):
+    id: str
+    filename: str
+    original_filename: str
+    title: str
+    description: Optional[str]
+    file_size: int
+    mime_type: str
+    category_id: Optional[str]
+    category_name: Optional[str] = None
+    tags: List[str]
+    uploaded_by: str
+    created_at: datetime
+    last_accessed: Optional[datetime]
+    download_count: int
+    is_public: bool
+
 # Quiz Models
 class QuestionOption(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
