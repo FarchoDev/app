@@ -206,31 +206,67 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "AuthProvider con login/register/logout implementado"
+        comment: "AuthProvider con login/register/logout implementado y funcionando"
 
-  - task: "Dashboard principal"
+  - task: "Dashboard principal mejorado"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Dashboard con estadísticas, progreso y lista de módulos con navegación hacia estudio"
+        comment: "Dashboard con estadísticas, progreso, lista de módulos y navegación hacia estudio (/study/:moduleId)"
 
-  - task: "UI moderna con Tailwind"
+  - task: "Vista de estudio de módulos (StudyModule)"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Interfaz moderna con componentes UI de shadcn/ui"
+        comment: "Componente completo con navegación por secciones, sidebar de progreso, marcado de completado"
+
+  - task: "Sistema de progreso visual"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Progress bars, estado de secciones (completada/actual/pendiente), cálculo automático de porcentajes"
+
+  - task: "Enrutamiento y navegación"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Rutas: /auth, /, /study/:moduleId con ProtectedRoute, navegación entre secciones"
+
+  - task: "UI moderna con Tailwind y componentes"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js, /app/frontend/src/App.css"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "shadcn/ui components, estilos personalizados para contenido educativo, responsive design"
 
   - task: "Vista de estudio de módulos"
     implemented: true
